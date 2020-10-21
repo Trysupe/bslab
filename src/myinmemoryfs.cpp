@@ -356,7 +356,7 @@ int MyInMemoryFS::fuseReaddir(const char *path, void *buf, fuse_fill_dir_t fille
 
     // iterate over dir
     for (int i = 0; i < NUM_DIR_ENTRIES; i++) {
-        if (files[i].name != "") {
+        if (files[i].name == "") {
             filler(buf, files[i].name, NULL, 0);
         }
     }
