@@ -8,6 +8,7 @@
 
 #include <fuse.h>
 #include <cmath>
+#include <iostream>
 
 #include "myfs.h"
 #include "blockdevice.h"

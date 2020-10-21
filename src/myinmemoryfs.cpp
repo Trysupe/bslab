@@ -69,6 +69,25 @@ int MyInMemoryFS::fuseMknod(const char *path, mode_t mode, dev_t dev) {
 
     // TODO: [PART 1] Implement this!
 
+    // verify the file path
+    // NOTE: this worked before changing fuseReaddir
+    if (strlen(path) > NAME_LENGTH) {
+        return -ENAMETOOLONG;
+    }
+
+//    strcpy(files[0].name, "file54");
+//    files[1]->name = "file54"
+
+//    std::cout << files[1].name << std::endl;
+
+    // TODO: finish this
+    for (int i = 0; i < NUM_DIR_ENTRIES; i++) {
+        if (files[i].name == strcat("/", path)) {
+            return -EEXIST;
+        }
+    }
+
+
     RETURN(0);
 }
 
@@ -341,6 +360,9 @@ int MyInMemoryFS::fuseReaddir(const char *path, void *buf, fuse_fill_dir_t fille
             filler(buf, files[i].name, NULL, 0);
         }
     }
+
+    // FIXME: remove this placeholder for debugging
+    filler(buf, "file54", NULL, 0);
 
     RETURN(0);
 }
