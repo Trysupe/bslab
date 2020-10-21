@@ -75,19 +75,20 @@ int MyInMemoryFS::fuseMknod(const char *path, mode_t mode, dev_t dev) {
         return -ENAMETOOLONG;
     }
 
-    strcpy(files[0].name, "file54");
+//    strcpy(files[0].name, "file54");
 
     std::cout << files[0].name << std::endl;
     std::cout << files[1].name << std::endl;
 
     // TODO: finish this
-/*
+
     for (int i = 0; i < NUM_DIR_ENTRIES; i++) {
-        if (files[i].name == strcat("/", path)) {
-            return -EEXIST;
-        }
+//        TODO: this breaks the fs
+//        if (strcmp(files[i].name, strcat("/", path)) == 0) {
+//            return -EEXIST;
+//        }
     }
-*/
+
 
 
     RETURN(0);
@@ -357,9 +358,11 @@ int MyInMemoryFS::fuseReaddir(const char *path, void *buf, fuse_fill_dir_t fille
     filler( buf, "..", NULL, 0 ); // Parent Directory
 
     // iterate over dir
+    // TODO: this cant work. logfile is kinda trapped in fuseGetattr
     for (int i = 0; i < NUM_DIR_ENTRIES; i++) {
         if (files[i].name == "") {
             filler(buf, files[i].name, NULL, 0);
+            strcpy(files[i].name, path);  // does not do anything
         }
     }
 
