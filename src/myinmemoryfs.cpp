@@ -75,17 +75,19 @@ int MyInMemoryFS::fuseMknod(const char *path, mode_t mode, dev_t dev) {
         return -ENAMETOOLONG;
     }
 
-//    strcpy(files[0].name, "file54");
-//    files[1]->name = "file54"
+    strcpy(files[0].name, "file54");
 
-//    std::cout << files[1].name << std::endl;
+    std::cout << files[0].name << std::endl;
+    std::cout << files[1].name << std::endl;
 
     // TODO: finish this
+/*
     for (int i = 0; i < NUM_DIR_ENTRIES; i++) {
         if (files[i].name == strcat("/", path)) {
             return -EEXIST;
         }
     }
+*/
 
 
     RETURN(0);
