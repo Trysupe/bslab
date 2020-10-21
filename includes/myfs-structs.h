@@ -16,4 +16,18 @@
 
 // TODO: Add structures of your file system here
 
+typedef struct {
+    char name[NAME_LENGTH];
+    uint32_t size = 0;
+    uint32_t uid;
+    uint32_t gid;
+    uint8_t permission;
+    char* data;
+
+    time_t atime;
+    time_t ctime;
+    time_t mtime;
+
+} MyFSFileInfo;
+
 #endif /* myfs_structs_h */

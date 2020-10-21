@@ -43,7 +43,7 @@
 /// You may add your own constructor code here.
 MyInMemoryFS::MyInMemoryFS() : MyFS() {
 
-    // TODO: [PART 1] Add your constructor code here
+    files = new MyFSFileInfo* [NUM_DIR_ENTRIES];
 
 }
 
@@ -52,7 +52,7 @@ MyInMemoryFS::MyInMemoryFS() : MyFS() {
 /// You may add your own destructor code here.
 MyInMemoryFS::~MyInMemoryFS() {
 
-    // TODO: [PART 1] Add your cleanup code here
+    delete[] files;
 
 }
 
