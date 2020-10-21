@@ -330,17 +330,16 @@ int MyInMemoryFS::fuseTruncate(const char *path, off_t newSize, struct fuse_file
 int MyInMemoryFS::fuseReaddir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fileInfo) {
     LOGM();
 
-    // TODO: [PART 1] Implement this!
-
     LOGF( "--> Getting The List of Files of %s\n", path );
 
     filler( buf, ".", NULL, 0 ); // Current Directory
     filler( buf, "..", NULL, 0 ); // Parent Directory
 
-    if ( strcmp( path, "/" ) == 0 ) // If the user is trying to show the files/directories of the root directory show the following
-    {
-        filler( buf, "file54", NULL, 0 );
-        filler( buf, "file349", NULL, 0 );
+    // iterate over dir
+    for (int i = 0; i < NUM_DIR_ENTRIES; i++) {
+        if (files[i] != nullptr) {
+            filler(buf, files[i]->name, NULL, 0);
+        }
     }
 
     RETURN(0);
