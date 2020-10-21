@@ -28,10 +28,6 @@
 #define DEBUG
 #define DEBUG_METHODS
 #define DEBUG_RETURN_VALUES
-#define NAME_LENGTH 255
-#define BLOCK_SIZE 512
-#define NUM_DIR_ENTRIES 64
-#define NUM_OPEN_FILES 64
 
 #include <unistd.h>
 #include <string.h>
