@@ -43,7 +43,7 @@
 /// You may add your own constructor code here.
 MyInMemoryFS::MyInMemoryFS() : MyFS() {
 
-    files = new MyFSFileInfo* [NUM_DIR_ENTRIES];
+    files = new MyFSFileInfo [NUM_DIR_ENTRIES];
 
 }
 
@@ -337,8 +337,8 @@ int MyInMemoryFS::fuseReaddir(const char *path, void *buf, fuse_fill_dir_t fille
 
     // iterate over dir
     for (int i = 0; i < NUM_DIR_ENTRIES; i++) {
-        if (files[i] != nullptr) {
-            filler(buf, files[i]->name, NULL, 0);
+        if (files[i].name != "") {
+            filler(buf, files[i].name, NULL, 0);
         }
     }
 

@@ -21,7 +21,9 @@ protected:
 public:
     static MyInMemoryFS *Instance();
 
-    MyFSFileInfo **files;
+    // declare files
+    MyFSFileInfo *files;
+
     // TODO: [PART 1] Add attributes of your file system here
 
     MyInMemoryFS();
