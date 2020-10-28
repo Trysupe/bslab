@@ -163,19 +163,26 @@ int MyInMemoryFS::fuseGetattr(const char *path, struct stat *statbuf) {
 
     int ret= 0;
 
+    // check parent directory
     if ( strcmp( path, "/" ) == 0 )
     {
         statbuf->st_mode = S_IFDIR | 0755;
         statbuf->st_nlink = 2; // Why "two" hardlinks instead of "one"? The answer is here: http://unix.stackexchange.com/a/101536
     }
-    else if ( strcmp( path, "/file54" ) == 0 || ( strcmp( path, "/file349" ) == 0 ) )
-    {
-        statbuf->st_mode = S_IFREG | 0644;
-        statbuf->st_nlink = 1;
-        statbuf->st_size = 1024;
-    }
     else
         ret= -ENOENT;
+
+    // FIXME: this breaks `cd` into dir
+    // write values to statbuf
+    MyFSFileInfo file = files[0];
+    statbuf->st_size = file.size;
+    statbuf->st_uid = file.uid;
+    statbuf->st_gid = file.gid;
+    statbuf->st_mode = file.permission;
+    statbuf->st_atime = file.atime;
+    statbuf->st_mtime = file.mtime;
+    statbuf->st_ctime = file.ctime;
+    statbuf->st_nlink = 1;
 
     RETURN(ret);
 }
