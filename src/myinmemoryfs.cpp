@@ -80,17 +80,17 @@ int MyInMemoryFS::fuseMknod(const char *path, mode_t mode, dev_t dev) {
         return -ENAMETOOLONG;
     }
 
-//    strcpy(files[0].name, "file54");
-
-
     // TODO: finish this
 
-    for (int i = 0; i < NUM_DIR_ENTRIES; i++) {
-//        TODO: this breaks the fs
-//        if (strcmp(files[i].name, strcat("/", path)) == 0) {
-//            return -EEXIST;
-//        }
-    }
+    MyFSFileInfo *file = new MyFSFileInfo();
+    strcpy(file->name, path + 1);
+    file->uid = getuid();
+    file->gid = getgid();
+    time(&(file->atime));
+    time(&(file->mtime));
+    time(&(file->ctime));
+//    files[getNextFreeIndex()] = file;
+    files[0] = *file;
 
 
 
