@@ -32,6 +32,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <iterator>
 
 #include "macros.h"
 #include "myfs.h"
@@ -44,6 +45,10 @@
 MyInMemoryFS::MyInMemoryFS() : MyFS() {
 
     files = new MyFSFileInfo [NUM_DIR_ENTRIES];
+
+    for (int i = 0; i < NUM_DIR_ENTRIES; i++) {
+        files[i].name[0] = '\0';
+    }
 
 }
 
@@ -77,8 +82,6 @@ int MyInMemoryFS::fuseMknod(const char *path, mode_t mode, dev_t dev) {
 
 //    strcpy(files[0].name, "file54");
 
-    std::cout << files[0].name << std::endl;
-    std::cout << files[1].name << std::endl;
 
     // TODO: finish this
 
@@ -358,16 +361,13 @@ int MyInMemoryFS::fuseReaddir(const char *path, void *buf, fuse_fill_dir_t fille
     filler( buf, "..", NULL, 0 ); // Parent Directory
 
     // iterate over dir
-    // TODO: this cant work. logfile is kinda trapped in fuseGetattr
-    for (int i = 0; i < NUM_DIR_ENTRIES; i++) {
-        if (files[i].name == "") {
-            filler(buf, files[i].name, NULL, 0);
-            strcpy(files[i].name, path);  // does not do anything
+    if (strcmp(path, "/") == 0) {
+        for (int i = 0; i < NUM_DIR_ENTRIES; i++) {
+            if (files[i].name[0] != '\0' ) {
+                filler(buf, files[i].name, NULL, 0);
+            }
         }
     }
-
-    // FIXME: remove this placeholder for debugging
-    filler(buf, "file54", NULL, 0);
 
     RETURN(0);
 }
