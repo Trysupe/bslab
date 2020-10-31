@@ -224,6 +224,12 @@ int MyInMemoryFS::fuseChmod(const char *path, mode_t mode) {
     LOGM();
 
     // TODO: [PART 1] Implement this!
+    int index = getIndex(path);
+    if (index == -1) {
+        return -ENOENT;
+    }
+
+    files[index].permission = mode;
 
     RETURN(0);
 }
