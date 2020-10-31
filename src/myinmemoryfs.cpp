@@ -61,6 +61,32 @@ MyInMemoryFS::~MyInMemoryFS() {
 
 }
 
+
+// return the index from handed over path
+int MyInMemoryFS::getIndex(const char *path) {
+    path++; // Ignore '/'
+    std::cout << "Trying to find: " << path << std::endl;
+    for (int i = 0; i < NUM_DIR_ENTRIES; i++) {
+        if (files[i].name[0] != '\0' && strcmp(path, files[i].name) == 0) {
+            std::cout << "Found: " << files[i].name << std::endl;
+            return i;
+        }
+    }
+    return -1;
+}
+
+// return next empty index from path
+int MyInMemoryFS::getNextFreeIndex() {
+    for (int i = 0; i < NUM_DIR_ENTRIES; i++) {
+        if (files[i].name[0] == '\0') {
+            return i;
+        }
+    }
+    return -1;
+}
+
+
+
 /// @brief Create a new file.
 ///
 /// Create a new file with given name and permissions.
@@ -89,8 +115,7 @@ int MyInMemoryFS::fuseMknod(const char *path, mode_t mode, dev_t dev) {
     time(&(file->atime));
     time(&(file->mtime));
     time(&(file->ctime));
-//    files[getNextFreeIndex()] = file;
-    files[0] = *file;
+    files[getNextFreeIndex()] = *file;
 
 
 
@@ -141,46 +166,29 @@ int MyInMemoryFS::fuseGetattr(const char *path, struct stat *statbuf) {
 
     LOGF( "\tAttributes of %s requested\n", path );
 
-    // GNU's definitions of the attributes (http://www.gnu.org/software/libc/manual/html_node/Attribute-Meanings.html):
-    // 		st_uid: 	The user ID of the file’s owner.
-    //		st_gid: 	The group ID of the file.
-    //		st_atime: 	This is the last access time for the file.
-    //		st_mtime: 	This is the time of the last modification to the contents of the file.
-    //		st_mode: 	Specifies the mode of the file. This includes file type information (see Testing File Type) and
-    //		            the file permission bits (see Permission Bits).
-    //		st_nlink: 	The number of hard links to the file. This count keeps track of how many directories have
-    //	             	entries for this file. If the count is ever decremented to zero, then the file itself is
-    //	             	discarded as soon as no process still holds it open. Symbolic links are not counted in the
-    //	             	total.
-    //		st_size:	This specifies the size of a regular file in bytes. For files that are really devices this field
-    //		            isn’t usually meaningful. For symbolic links this specifies the length of the file name the link
-    //		            refers to.
+    statbuf->st_uid = getuid();
+    statbuf->st_gid = getgid();
+    statbuf->st_mode = S_IFDIR | 0755;
+    statbuf->st_atime = time( NULL );
+    statbuf->st_mtime = time( NULL );
 
-    statbuf->st_uid = getuid(); // The owner of the file/directory is the user who mounted the filesystem
-    statbuf->st_gid = getgid(); // The group of the file/directory is the same as the group of the user who mounted the filesystem
-    statbuf->st_atime = time( NULL ); // The last "a"ccess of the file/directory is right now
-    statbuf->st_mtime = time( NULL ); // The last "m"odification of the file/directory is right now
-
-    int ret= 0;
+    int ret = 0;
 
     // check parent directory
     if ( strcmp( path, "/" ) == 0 )
     {
-        statbuf->st_mode = S_IFDIR | 0755;
-        statbuf->st_nlink = 2; // Why "two" hardlinks instead of "one"? The answer is here: http://unix.stackexchange.com/a/101536
+        statbuf->st_nlink = 2;
     }
-    else
-        ret= -ENOENT;
+
+    int index = getIndex(path);
+    if (index == -1) {
+        ret = -ENOENT;
+    }
 
     // FIXME: this breaks `cd` into dir
     // write values to statbuf
-    MyFSFileInfo file = files[0];
+    MyFSFileInfo file = files[index];
     statbuf->st_size = file.size;
-    statbuf->st_uid = file.uid;
-    statbuf->st_gid = file.gid;
-    statbuf->st_mode = file.permission;
-    statbuf->st_atime = file.atime;
-    statbuf->st_mtime = file.mtime;
     statbuf->st_ctime = file.ctime;
     statbuf->st_nlink = 1;
 

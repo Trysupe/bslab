@@ -16,6 +16,11 @@
 
 /// @brief In-memory implementation of a simple file system.
 class MyInMemoryFS : public MyFS {
+
+private:
+    int getIndex(const char *path);
+    int getNextFreeIndex();
+
 protected:
     // BlockDevice blockDevice;
 
