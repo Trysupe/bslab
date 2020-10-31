@@ -21,7 +21,7 @@ typedef struct {
     uint32_t size = 0;
     uid_t uid;
     gid_t gid;
-    mode_t permission = 0777;
+    mode_t permission = S_IFREG | 0777;
     char* data;
 
     time_t atime;
