@@ -156,7 +156,19 @@ int MyInMemoryFS::fuseRename(const char *path, const char *newpath) {
 
     // TODO: [PART 1] Implement this!
 
-    return 0;
+    // check if new name is valid
+    if (strlen((newpath + 1)) > NAME_LENGTH) {
+        return -ENAMETOOLONG;
+    }
+
+    // if there's a file at path, start renaming
+    int index = getIndex(path);
+    if (index != -1) {
+        strcpy(files[index].name, newpath + 1);
+        return 0;
+    }
+
+    return -ENOENT;
 }
 
 /// @brief Get file meta data.
