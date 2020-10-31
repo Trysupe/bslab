@@ -24,7 +24,7 @@
 
 #undef DEBUG
 
-// TODO: Comment lines to reduce debug messages
+// NOTE: Comment lines to reduce debug messages
 #define DEBUG
 #define DEBUG_METHODS
 #define DEBUG_RETURN_VALUES
@@ -61,30 +61,6 @@ MyInMemoryFS::~MyInMemoryFS() {
 
 }
 
-
-int MyInMemoryFS::getIndex(const char *path) {
-    path++; // Ignore '/'
-    std::cout << "Trying to find: " << path << std::endl;
-    for (int i = 0; i < NUM_DIR_ENTRIES; i++) {
-        if (files[i].name[0] != '\0' && strcmp(path, files[i].name) == 0) {
-            std::cout << "Found: " << files[i].name << std::endl;
-            return i;
-        }
-    }
-    return -1;
-}
-
-int MyInMemoryFS::getNextFreeIndex() {
-    for (int i = 0; i < NUM_DIR_ENTRIES; i++) {
-        if (files[i].name[0] == '\0') {
-            return i;
-        }
-    }
-    return -1;
-}
-
-
-
 /// @brief Create a new file.
 ///
 /// Create a new file with given name and permissions.
@@ -96,15 +72,11 @@ int MyInMemoryFS::getNextFreeIndex() {
 int MyInMemoryFS::fuseMknod(const char *path, mode_t mode, dev_t dev) {
     LOGM();
 
-    // TODO: [PART 1] Implement this!
-
     // verify the file path
     // NOTE: this worked before changing fuseReaddir
     if (strlen(path) > NAME_LENGTH) {
         return -ENAMETOOLONG;
     }
-
-    // TODO: finish this
 
     MyFSFileInfo *file = new MyFSFileInfo();
     strcpy(file->name, path + 1);
@@ -129,8 +101,6 @@ int MyInMemoryFS::fuseMknod(const char *path, mode_t mode, dev_t dev) {
 int MyInMemoryFS::fuseUnlink(const char *path) {
     LOGM();
 
-    // TODO: [PART 1] Implement this!
-
     int index = getIndex(path);
     if(index == -1) {
         return -ENOENT;
@@ -153,8 +123,6 @@ int MyInMemoryFS::fuseUnlink(const char *path) {
 /// \return 0 on success, -ERRNO on failure.
 int MyInMemoryFS::fuseRename(const char *path, const char *newpath) {
     LOGM();
-
-    // TODO: [PART 1] Implement this!
 
     // check if new name is valid
     if (strlen((newpath + 1)) > NAME_LENGTH) {
@@ -180,8 +148,6 @@ int MyInMemoryFS::fuseRename(const char *path, const char *newpath) {
 int MyInMemoryFS::fuseGetattr(const char *path, struct stat *statbuf) {
     LOGM();
 
-    // TODO: [PART 1] Implement this!
-
     LOGF( "\tAttributes of %s requested\n", path );
 
     statbuf->st_uid = getuid();
@@ -202,7 +168,6 @@ int MyInMemoryFS::fuseGetattr(const char *path, struct stat *statbuf) {
         RETURN(-ENOENT);
     }
 
-    // FIXME: this breaks `cd` into dir
     // write values to statbuf
     statbuf->st_mode = S_IFREG | files[index].permission;
     MyFSFileInfo file = files[index];
@@ -223,7 +188,6 @@ int MyInMemoryFS::fuseGetattr(const char *path, struct stat *statbuf) {
 int MyInMemoryFS::fuseChmod(const char *path, mode_t mode) {
     LOGM();
 
-    // TODO: [PART 1] Implement this!
     int index = getIndex(path);
     if (index == -1) {
         return -ENOENT;
@@ -441,11 +405,32 @@ void* MyInMemoryFS::fuseInit(struct fuse_conn_info *conn) {
 void MyInMemoryFS::fuseDestroy() {
     LOGM();
 
-    // TODO: [PART 1] Implement this!
-
 }
 
-// TODO: [PART 1] You may add your own additional methods here!
+// NOTE: [PART 1] You may add your own additional methods here!
+
+// return the index of a given file
+int MyInMemoryFS::getIndex(const char *path) {
+    path++; // Ignore '/'
+    std::cout << "Trying to find: " << path << std::endl;
+    for (int i = 0; i < NUM_DIR_ENTRIES; i++) {
+        if (files[i].name[0] != '\0' && strcmp(path, files[i].name) == 0) {
+            std::cout << "Found: " << files[i].name << std::endl;
+            return i;
+        }
+    }
+    return -1;
+}
+
+// return the index of the next free slot available to create an item
+int MyInMemoryFS::getNextFreeIndex() {
+    for (int i = 0; i < NUM_DIR_ENTRIES; i++) {
+        if (files[i].name[0] == '\0') {
+            return i;
+        }
+    }
+    return -1;
+}
 
 // DO NOT EDIT ANYTHING BELOW THIS LINE!!!
 
