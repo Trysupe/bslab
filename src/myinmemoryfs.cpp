@@ -62,7 +62,6 @@ MyInMemoryFS::~MyInMemoryFS() {
 }
 
 
-// return the index from handed over path
 int MyInMemoryFS::getIndex(const char *path) {
     path++; // Ignore '/'
     std::cout << "Trying to find: " << path << std::endl;
@@ -75,7 +74,6 @@ int MyInMemoryFS::getIndex(const char *path) {
     return -1;
 }
 
-// return next empty index from path
 int MyInMemoryFS::getNextFreeIndex() {
     for (int i = 0; i < NUM_DIR_ENTRIES; i++) {
         if (files[i].name[0] == '\0') {
@@ -172,17 +170,16 @@ int MyInMemoryFS::fuseGetattr(const char *path, struct stat *statbuf) {
     statbuf->st_atime = time( NULL );
     statbuf->st_mtime = time( NULL );
 
-    int ret = 0;
-
     // check parent directory
     if ( strcmp( path, "/" ) == 0 )
     {
         statbuf->st_nlink = 2;
+        RETURN(0);
     }
 
     int index = getIndex(path);
     if (index == -1) {
-        ret = -ENOENT;
+        RETURN(-ENOENT);
     }
 
     // FIXME: this breaks `cd` into dir
@@ -192,7 +189,7 @@ int MyInMemoryFS::fuseGetattr(const char *path, struct stat *statbuf) {
     statbuf->st_ctime = file.ctime;
     statbuf->st_nlink = 1;
 
-    RETURN(ret);
+    RETURN(0);
 }
 
 /// @brief Change file permissions.
