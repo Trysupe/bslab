@@ -186,7 +186,6 @@ int MyInMemoryFS::fuseGetattr(const char *path, struct stat *statbuf) {
 
     statbuf->st_uid = getuid();
     statbuf->st_gid = getgid();
-    statbuf->st_mode = S_IFREG | 0777;
     statbuf->st_atime = time( NULL );
     statbuf->st_mtime = time( NULL );
 
@@ -205,6 +204,7 @@ int MyInMemoryFS::fuseGetattr(const char *path, struct stat *statbuf) {
 
     // FIXME: this breaks `cd` into dir
     // write values to statbuf
+    statbuf->st_mode = S_IFREG | files[index].permission;
     MyFSFileInfo file = files[index];
     statbuf->st_size = file.size;
     statbuf->st_ctime = file.ctime;
