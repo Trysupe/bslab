@@ -131,6 +131,14 @@ int MyInMemoryFS::fuseUnlink(const char *path) {
 
     // TODO: [PART 1] Implement this!
 
+    int index = getIndex(path);
+    if(index == -1) {
+        return -ENOENT;
+    }
+
+    free(files[index].data);
+    files[index].name[0] = '\0';
+
     RETURN(0);
 }
 
