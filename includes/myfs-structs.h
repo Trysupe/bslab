@@ -19,8 +19,8 @@
 typedef struct {
     char name[NAME_LENGTH];
     uint32_t size = 0;
-    uint32_t uid;
-    uint32_t gid;
+    uid_t uid;
+    gid_t gid;
     mode_t permission = 0777;
     char* data;
 

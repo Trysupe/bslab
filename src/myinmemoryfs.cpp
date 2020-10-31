@@ -209,7 +209,15 @@ int MyInMemoryFS::fuseChmod(const char *path, mode_t mode) {
 int MyInMemoryFS::fuseChown(const char *path, uid_t uid, gid_t gid) {
     LOGM();
 
-    // TODO: [PART 1] Implement this!
+    int index = getIndex(path);
+    if (index == -1) {
+        return -ENOENT;
+    }
+
+    files[index].uid = uid;
+    files[index].gid = gid;
+
+    // TODO: Ask prof why this is not working
 
     RETURN(0);
 }
@@ -404,6 +412,8 @@ void* MyInMemoryFS::fuseInit(struct fuse_conn_info *conn) {
 /// This function is called when the file system is unmounted. You may add some cleanup code here.
 void MyInMemoryFS::fuseDestroy() {
     LOGM();
+
+    // TODO: [PART 1] Implement this!
 
 }
 
