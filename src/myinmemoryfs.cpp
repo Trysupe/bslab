@@ -166,7 +166,7 @@ int MyInMemoryFS::fuseGetattr(const char *path, struct stat *statbuf) {
 
     statbuf->st_uid = getuid();
     statbuf->st_gid = getgid();
-    statbuf->st_mode = S_IFDIR | 0755;
+    statbuf->st_mode = S_IFREG | 0755;
     statbuf->st_atime = time( NULL );
     statbuf->st_mtime = time( NULL );
 
@@ -174,6 +174,7 @@ int MyInMemoryFS::fuseGetattr(const char *path, struct stat *statbuf) {
     if ( strcmp( path, "/" ) == 0 )
     {
         statbuf->st_nlink = 2;
+        statbuf->st_mode = S_IFDIR | 0755;
         RETURN(0);
     }
 
