@@ -1,0 +1,11 @@
+- Bei bearbeitung: kommt immer die Meldung, dass die Datei bearbeitet wurde
+- Fehlermeldungen
+    - fuseMknod
+    - fuseRename
+    - fuseChmod: Fehlermeldung, z.B. wenn die nötigen Rechte fehlen
+    - fuseOpen
+    - fuseRead
+    - fuseWrite
+- alles nochmal testen
+    - vorgegebene Tests
+    `valgrind ./bin/mount.myfs mount -l log.txt -f`
