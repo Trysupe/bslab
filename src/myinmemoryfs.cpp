@@ -301,9 +301,16 @@ int MyInMemoryFS::fuseRead(const char *path, char *buf, size_t size, off_t offse
 int MyInMemoryFS::fuseWrite(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) {
     LOGM();
 
-    // TODO: [PART 1] Implement this!
+    int fileIndex = openFiles[fileInfo->fh];
 
-    RETURN(0);
+    // determine new file size as the max value of old size or new content
+    uint32_t newSize = (files[fileIndex].size < (uint32_t)(offset+size)) ? (uint32_t)(offset+size): files[fileIndex].size;
+    files[fileIndex].size = newSize;
+
+    // change size of data to new size and write new contents
+    files[fileIndex].data = (char*)(realloc(files[fileIndex].data, files[fileIndex].size));
+    memcpy(files[fileIndex].data + offset, buf, size);
+    RETURN(size);
 }
 
 /// @brief Close a file.
