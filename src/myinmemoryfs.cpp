@@ -451,10 +451,10 @@ void MyInMemoryFS::fuseDestroy() {
 // return the index of a given file
 int MyInMemoryFS::getIndex(const char *path) {
     path++; // Ignore '/'
-    std::cout << "Trying to find: " << path << std::endl;
+//    std::cout << "Trying to find: " << path << std::endl;
     for (int i = 0; i < NUM_DIR_ENTRIES; i++) {
         if (files[i].name[0] != '\0' && strcmp(path, files[i].name) == 0) {
-            std::cout << "Found: " << files[i].name << std::endl;
+//            std::cout << "Found: " << files[i].name << std::endl;
             return i;
         }
     }
