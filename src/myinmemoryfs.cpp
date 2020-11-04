@@ -59,6 +59,7 @@ MyInMemoryFS::MyInMemoryFS() : MyFS() {
 MyInMemoryFS::~MyInMemoryFS() {
 
     delete[] files;
+    delete[] openFiles;
 
 }
 
@@ -209,16 +210,18 @@ int MyInMemoryFS::fuseChmod(const char *path, mode_t mode) {
 /// \return 0 on success, -ERRNO on failure.
 int MyInMemoryFS::fuseChown(const char *path, uid_t uid, gid_t gid) {
     LOGM();
-
     int index = getIndex(path);
     if (index == -1) {
         return -ENOENT;
     }
 
     files[index].uid = uid;
-    files[index].gid = gid;
 
-    // TODO: Ask prof why this is not working
+
+    if (gid <= 100000){ // If GID is more than 100000 no group was given to chown so don't edit the edit the gid of the file
+        files[index].gid = gid;
+    }
+
 
     RETURN(0);
 }
@@ -322,7 +325,23 @@ int MyInMemoryFS::fuseWrite(const char *path, const char *buf, size_t size, off_
 int MyInMemoryFS::fuseRelease(const char *path, struct fuse_file_info *fileInfo) {
     LOGM();
 
-    // TODO: [PART 1] Implement this!
+    int fileIndex = getIndex(path);
+    if (fileIndex != -1) { //does the file exist?
+        // look for file in openfiles
+        for (int i = 0; i < NUM_OPEN_FILES; i++) {
+            int curIndex = openFiles[i];
+            // found file in openfiles
+            if (curIndex >= 0) {
+                if (strcmp(path + 1, files[curIndex].name) == 0) {
+                    openFiles[i] = -ENOENT;
+                    openFileCount--;
+                    break;
+                }
+            }
+        }
+    } else {
+        return -ENOENT;
+    }
 
     RETURN(0);
 }
@@ -338,9 +357,10 @@ int MyInMemoryFS::fuseRelease(const char *path, struct fuse_file_info *fileInfo)
 int MyInMemoryFS::fuseTruncate(const char *path, off_t newSize) {
     LOGM();
 
-    // TODO: [PART 1] Implement this!
+    int fileIndex = getIndex(path);
+    int ret = truncate(fileIndex, newSize);
 
-    return 0;
+    return ret;
 }
 
 /// @brief Truncate a file.
@@ -356,9 +376,10 @@ int MyInMemoryFS::fuseTruncate(const char *path, off_t newSize) {
 int MyInMemoryFS::fuseTruncate(const char *path, off_t newSize, struct fuse_file_info *fileInfo) {
     LOGM();
 
-    // TODO: [PART 1] Implement this!
+    int fileIndex = openFiles[fileInfo->fh];
+    int ret = truncate(fileIndex, newSize);
 
-    RETURN(0);
+    RETURN(ret);
 }
 
 /// @brief Read a directory.
@@ -421,7 +442,7 @@ void* MyInMemoryFS::fuseInit(struct fuse_conn_info *conn) {
 void MyInMemoryFS::fuseDestroy() {
     LOGM();
 
-    // TODO: [PART 1] Implement this!
+    // TODO: [PART 1] Implement this if needed
 
 }
 
@@ -458,6 +479,31 @@ int MyInMemoryFS::getNextFreeIndexOpenFiles() {
     }
     return -1;
 }
+
+
+int MyInMemoryFS::truncate(int fileIndex, off_t newSize) {
+    // If the file is already of the desired size, nothing needs to be done
+    if (files[fileIndex].size == newSize) {
+        return 0;
+    }
+
+    uint32_t oldSize = files[fileIndex].size;
+
+    files[fileIndex].size = newSize;
+    files[fileIndex].data = (char *) (realloc(files[fileIndex].data, newSize));
+
+    // If new size is bigger than old size, fill new space with dummy data
+    if (newSize > oldSize) {
+        uint32_t space = newSize - oldSize;
+        uint32_t offset = newSize - space;
+        for (uint32_t i = 0; i < space; i++) {
+            files[fileIndex].data[offset + i] = '\0';
+        }
+    }
+
+    return 0;
+}
+
 
 
 // DO NOT EDIT ANYTHING BELOW THIS LINE!!!
