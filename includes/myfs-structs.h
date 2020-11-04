@@ -30,4 +30,20 @@ typedef struct {
 
 } MyFSFileInfo;
 
+typedef struct {
+    char name[NAME_LENGTH];
+    int32_t firstBlock;
+    struct stat stat = {};
+    int rootDirIndex; // first block
+} rootFile;
+
+typedef struct {
+    char readCache[BLOCK_SIZE];
+    int32_t readCacheBlock = -1;
+    char writeCache[BLOCK_SIZE];
+    int32_t writeCacheBlock = -1;
+    rootFile *file;
+} openFile;
+
+
 #endif /* myfs_structs_h */

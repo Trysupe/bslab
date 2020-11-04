@@ -49,6 +49,7 @@ MyInMemoryFS::MyInMemoryFS() : MyFS() {
     for (int i = 0; i < NUM_DIR_ENTRIES; i++) {
         files[i].name[0] = '\0';
     }
+    openFiles = new int32_t[NUM_OPEN_FILES];
 
 }
 
@@ -233,7 +234,14 @@ int MyInMemoryFS::fuseChown(const char *path, uid_t uid, gid_t gid) {
 int MyInMemoryFS::fuseOpen(const char *path, struct fuse_file_info *fileInfo) {
     LOGM();
 
-    // TODO: [PART 1] Implement this!
+    int pathIndex = getIndex(path);
+
+    MyFSFileInfo file = files[pathIndex];
+
+    int openFileIndex = getNextFreeIndexOpenFiles();
+    openFiles[openFileIndex] = pathIndex;
+    openFileCount++;
+    fileInfo->fh = openFileIndex;
 
     RETURN(0);
 }
@@ -257,29 +265,22 @@ int MyInMemoryFS::fuseOpen(const char *path, struct fuse_file_info *fileInfo) {
 /// -ERRNO on failure.
 int MyInMemoryFS::fuseRead(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) {
     LOGM();
-
-    // TODO: [PART 1] Implement this!
-
     LOGF( "--> Trying to read %s, %lu, %lu\n", path, (unsigned long) offset, size );
 
-    char file54Text[] = "Hello World From File54!\n";
-    char file349Text[] = "Hello World From File349!\n";
-    char *selectedText = NULL;
+    int index = openFiles[fileInfo->fh];
+    MyFSFileInfo file = files[index];
 
-    // ... //
+    // if the offset is bigger than the file, return 0 for error
+    if(offset >= file.size) {
+        return 0;
+    }
 
-    if ( strcmp( path, "/file54" ) == 0 )
-        selectedText = file54Text;
-    else if ( strcmp( path, "/file349" ) == 0 )
-        selectedText = file349Text;
-    else
-        return -ENOENT;
+    if((offset + size) > file.size) {
+        size = file.size - offset;
+    }
+    memcpy( buf, file.data + offset, size );
 
-    // ... //
-
-    memcpy( buf, selectedText + offset, size );
-
-    RETURN((int) (strlen( selectedText ) - offset));
+    RETURN(size);
 }
 
 /// @brief Write to a file.
@@ -441,6 +442,16 @@ int MyInMemoryFS::getNextFreeIndex() {
     }
     return -1;
 }
+
+int MyInMemoryFS::getNextFreeIndexOpenFiles() {
+    for (int i = 0; i < NUM_OPEN_FILES; i++) {
+        if (openFiles[i] == -ENOENT) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 
 // DO NOT EDIT ANYTHING BELOW THIS LINE!!!
 

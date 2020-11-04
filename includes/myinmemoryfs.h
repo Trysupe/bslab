@@ -20,6 +20,10 @@ class MyInMemoryFS : public MyFS {
 private:
     int getIndex(const char *path);
     int getNextFreeIndex();
+    int getNextFreeIndexOpenFiles();
+
+    int32_t *openFiles;
+    int openFileCount = 0;
 
 protected:
     // BlockDevice blockDevice;
