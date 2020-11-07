@@ -23,7 +23,7 @@ private:
     int getNextFreeIndexOpenFiles();
     int truncate(int fileIndex, off_t newSize);
 
-    int32_t *openFiles;
+    int *openFiles;
     int openFileCount = 0;
 
 protected:

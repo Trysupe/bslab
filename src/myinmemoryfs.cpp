@@ -79,8 +79,8 @@ int MyInMemoryFS::fuseMknod(const char *path, mode_t mode, dev_t dev) {
     }
 
     MyFSFileInfo *file = new MyFSFileInfo();
-    strcpy(file->name, path + 1);
-    file->uid = getuid();
+    strcpy(file->name, path + 1);  // +1 to shove the path slash `/`
+    file->uid = getuid();  // get uid from current system user
     file->gid = getgid();
     time(&(file->atime));
     time(&(file->mtime));
@@ -106,8 +106,8 @@ int MyInMemoryFS::fuseUnlink(const char *path) {
         return -ENOENT;
     }
 
-    free(files[index].data);
-    files[index].name[0] = '\0';
+    free(files[index].data);  // free the memory
+    files[index].name[0] = '\0';  // reset the name nullpointer hack
 
     RETURN(0);
 }
@@ -128,6 +128,7 @@ int MyInMemoryFS::fuseRename(const char *path, const char *newpath) {
     if (strlen((newpath + 1)) > NAME_LENGTH) {
         return -ENAMETOOLONG;
     }
+    // make sure the file does not already exist
     if (getIndex(newpath) != -1) {
         return -EEXIST;
     }
@@ -151,18 +152,20 @@ int MyInMemoryFS::fuseRename(const char *path, const char *newpath) {
 int MyInMemoryFS::fuseGetattr(const char *path, struct stat *statbuf) {
     LOGM();
 
+    // statbuf: Structure containing the meta data. cf. original code template
+
     LOGF( "\tAttributes of %s requested\n", path );
 
     statbuf->st_uid = getuid();
     statbuf->st_gid = getgid();
+    statbuf->st_atime = time( NULL );
+    statbuf->st_mtime = time( NULL );
 
     // check parent directory
     if ( strcmp( path, "/" ) == 0 )
     {
         statbuf->st_nlink = 2;
         statbuf->st_mode = S_IFDIR | 0755;
-        statbuf->st_atime = time( NULL );
-        statbuf->st_mtime = time( NULL );
         RETURN(0);
     }
 
@@ -240,11 +243,13 @@ int MyInMemoryFS::fuseChown(const char *path, uid_t uid, gid_t gid) {
 int MyInMemoryFS::fuseOpen(const char *path, struct fuse_file_info *fileInfo) {
     LOGM();
 
+    // if too many files are open
     if (openFileCount == NUM_OPEN_FILES) {
         return -EMFILE;
     }
 
     int pathIndex = getIndex(path);
+    // if the path does not exist
     if (pathIndex == -1) {
         return -ENOENT;
     }
@@ -252,7 +257,7 @@ int MyInMemoryFS::fuseOpen(const char *path, struct fuse_file_info *fileInfo) {
     int openFileIndex = getNextFreeIndexOpenFiles();
     openFiles[openFileIndex] = pathIndex;
     openFileCount++;
-    fileInfo->fh = openFileIndex;
+    fileInfo->fh = openFileIndex;  // update filehandler
 
     RETURN(0);
 }
@@ -278,7 +283,7 @@ int MyInMemoryFS::fuseRead(const char *path, char *buf, size_t size, off_t offse
     LOGM();
     LOGF( "--> Trying to read %s, %lu, %lu\n", path, (unsigned long) offset, size );
 
-    int index = openFiles[fileInfo->fh];
+    int index = openFiles[fileInfo->fh]; // cf. page 40 of `BSLab-Teil1.pdf`
 
     // if the offset is bigger than the file, return 0 for error
     if(offset >= files[index].size) {
@@ -290,7 +295,7 @@ int MyInMemoryFS::fuseRead(const char *path, char *buf, size_t size, off_t offse
     }
     memcpy( buf, files[index].data + offset, size );
 
-    time(&(files[index].atime));
+    time(&(files[index].atime));  // update time
 
     RETURN(size);
 }
@@ -350,16 +355,18 @@ int MyInMemoryFS::fuseRelease(const char *path, struct fuse_file_info *fileInfo)
     LOGM();
 
     int fileIndex = getIndex(path);
-    if (fileIndex != -1) { //does the file exist?
+    if (fileIndex != -1) { // does the file exist?
+
         // look for file in openfiles
         for (int i = 0; i < NUM_OPEN_FILES; i++) {
             int curIndex = openFiles[i];
+
             // found file in openfiles
             if (curIndex >= 0) {
                 if (strcmp(path + 1, files[curIndex].name) == 0) {
                     openFiles[i] = -ENOENT;
                     openFileCount--;
-                    break;
+                    break;  // exit the for loop
                 }
             }
         }
@@ -454,10 +461,10 @@ void* MyInMemoryFS::fuseInit(struct fuse_conn_info *conn) {
 
         LOG("Using in-memory mode");
 
+        // initialize the arrays to track the files during runtime
         for (int i = 0; i < NUM_DIR_ENTRIES; i++) {
             files[i].name[0] = '\0';
         }
-
         for (int i = 0; i < NUM_OPEN_FILES; i++) {
             openFiles[i] = -ENOENT;
         }
@@ -518,16 +525,16 @@ int MyInMemoryFS::truncate(int fileIndex, off_t newSize) {
         return 0;
     }
 
-    uint32_t oldSize = files[fileIndex].size;
+    int oldSize = files[fileIndex].size;
 
     files[fileIndex].size = newSize;
     files[fileIndex].data = (char *) (realloc(files[fileIndex].data, newSize));
 
     // If new size is bigger than old size, fill new space with dummy data
     if (newSize > oldSize) {
-        uint32_t space = newSize - oldSize;
-        uint32_t offset = newSize - space;
-        for (uint32_t i = 0; i < space; i++) {
+        int space = newSize - oldSize;
+        int offset = newSize - space;
+        for (int i = 0; i < space; i++) {
             files[fileIndex].data[offset + i] = '\0';
         }
     }
