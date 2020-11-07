@@ -17,15 +17,6 @@
 /// @brief In-memory implementation of a simple file system.
 class MyInMemoryFS : public MyFS {
 
-private:
-    int getIndex(const char *path);
-    int getNextFreeIndex();
-    int getNextFreeIndexOpenFiles();
-    int truncate(int fileIndex, off_t newSize);
-
-    int *openFiles;
-    int openFileCount = 0;
-
 protected:
     // BlockDevice blockDevice;
 
@@ -34,8 +25,8 @@ public:
 
     // declare files
     MyFSFileInfo *files;
-
-    // TODO: [PART 1] Add attributes of your file system here
+    int *openFiles;
+    int openFileCount = 0;
 
     MyInMemoryFS();
     ~MyInMemoryFS();
@@ -60,7 +51,10 @@ public:
     virtual int fuseTruncate(const char *path, off_t offset, struct fuse_file_info *fileInfo);
     virtual void fuseDestroy();
 
-    // TODO: Add methods of your file system here
+    int getIndex(const char *path);
+    int getNextFreeIndex();
+    int getNextFreeIndexOpenFiles();
+    int truncate(int fileIndex, off_t newSize);
 
 };
 

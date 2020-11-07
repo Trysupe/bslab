@@ -14,14 +14,12 @@
 #define NUM_DIR_ENTRIES 64
 #define NUM_OPEN_FILES 64
 
-// TODO: Add structures of your file system here
-
 typedef struct {
     char name[NAME_LENGTH];
-    uint32_t size = 0;
-    uid_t uid;
+    int size = 0;
+    uid_t uid; // cf. https://man7.org/linux/man-pages//man3/uid_t.3.html
     gid_t gid;
-    mode_t permission = S_IFREG | 0777;
+    mode_t permission = S_IFREG | 0777;  // cf. mknod
     char* data;
 
     time_t atime;
@@ -31,18 +29,10 @@ typedef struct {
 } MyFSFileInfo;
 
 typedef struct {
-    char name[NAME_LENGTH];
-    int32_t firstBlock;
-    struct stat stat = {};
-    int rootDirIndex; // first block
-} rootFile;
-
-typedef struct {
     char readCache[BLOCK_SIZE];
-    int32_t readCacheBlock = -1;
+    int readCacheBlock = -1;
     char writeCache[BLOCK_SIZE];
-    int32_t writeCacheBlock = -1;
-    rootFile *file;
+    int writeCacheBlock = -1;
 } openFile;
 
 
