@@ -45,15 +45,7 @@
 MyInMemoryFS::MyInMemoryFS() : MyFS() {
 
     files = new MyFSFileInfo [NUM_DIR_ENTRIES];
-
-    for (int i = 0; i < NUM_DIR_ENTRIES; i++) {
-        files[i].name[0] = '\0';
-    }
-
     openFiles = new int32_t[NUM_OPEN_FILES];
-    for (int i = 0; i < NUM_OPEN_FILES; i++) {
-        openFiles[i] = -ENOENT;
-    }
 
 }
 
@@ -434,7 +426,14 @@ void* MyInMemoryFS::fuseInit(struct fuse_conn_info *conn) {
 
         LOG("Using in-memory mode");
 
-        // TODO: [PART 1] Implement your initialization methods here
+        for (int i = 0; i < NUM_DIR_ENTRIES; i++) {
+            files[i].name[0] = '\0';
+        }
+
+        for (int i = 0; i < NUM_OPEN_FILES; i++) {
+            openFiles[i] = -ENOENT;
+        }
+
     }
 
     RETURN(0);
