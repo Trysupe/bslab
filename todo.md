@@ -1,1 +1,0 @@
-- Bei bearbeitung: kommt immer die Meldung, dass die Datei bearbeitet wurde: time
