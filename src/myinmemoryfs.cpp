@@ -52,7 +52,7 @@ MyInMemoryFS::MyInMemoryFS() : MyFS() {
 
     openFiles = new int32_t[NUM_OPEN_FILES];
     for (int i = 0; i < NUM_OPEN_FILES; i++) {
-        openFiles[i] = 0;
+        openFiles[i] = -ENOENT;
     }
 
 }
