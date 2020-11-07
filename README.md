@@ -9,18 +9,12 @@ dann die Funktionalität des
 bereitstellen. Das lässt sich mit den folgenden Kommandos ausprobieren (dabei 
 `<pfad-zum-dateisystem>` durch das Verzeichnis mit dem Template ersetzen):
 
-	mkdir build
-	cd build
-	cmake <pfad-zum-template> && make
+	mkdir -p build
+	cd build && cmake .. && cd ..
+	make
+	# optional:
 	mkdir mount
 	bin/mount.myfs mount -l log.txt
-	cd mount
-	ls
-	cat file349
-	cat file54
-	cd ..
-	fusermount -u mount # oder für Mac OS-X: umount mount
-	
 
 Folgende Informationen können noch hilfreich sein:
 
