@@ -313,21 +313,27 @@ int MyInMemoryFS::fuseRead(const char *path, char *buf, size_t size, off_t offse
 int MyInMemoryFS::fuseWrite(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) {
     LOGM();
 
-    // verify open file handler
+    // verify that file from file handler exists
     if(openFiles[fileInfo->fh] == -ENOENT) {
         return -EBADF;
     }
 
-    int fileIndex = openFiles[fileInfo->fh];
+    int fileIndex = openFiles[fileInfo->fh];  // cf. page 40 of `BSLab-Teil1.pdf`
 
     // determine new file size as the max value of old size or new content
-    uint32_t newSize = (files[fileIndex].size < (uint32_t)(offset+size)) ? (uint32_t)(offset+size): files[fileIndex].size;
+    int newSize = 0;
+    if (files[fileIndex].size < (offset+size)) {
+        newSize = offset+size;
+    } else {
+        newSize = files[fileIndex].size;
+    }
     files[fileIndex].size = newSize;
 
     // change size of data to new size and write new contents
     files[fileIndex].data = (char*)(realloc(files[fileIndex].data, files[fileIndex].size + 1));
     memcpy(files[fileIndex].data + offset, buf, size);
 
+    // update time
     time(&(files[fileIndex].mtime));
     time(&(files[fileIndex].ctime));
 
