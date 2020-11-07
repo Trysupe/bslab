@@ -49,7 +49,11 @@ MyInMemoryFS::MyInMemoryFS() : MyFS() {
     for (int i = 0; i < NUM_DIR_ENTRIES; i++) {
         files[i].name[0] = '\0';
     }
+
     openFiles = new int32_t[NUM_OPEN_FILES];
+    for (int i = 0; i < NUM_OPEN_FILES; i++) {
+        openFiles[i] = 0;
+    }
 
 }
 
