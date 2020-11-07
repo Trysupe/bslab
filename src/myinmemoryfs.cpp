@@ -315,7 +315,7 @@ int MyInMemoryFS::fuseWrite(const char *path, const char *buf, size_t size, off_
     files[fileIndex].size = newSize;
 
     // change size of data to new size and write new contents
-    files[fileIndex].data = (char*)(realloc(files[fileIndex].data, files[fileIndex].size));
+    files[fileIndex].data = (char*)(realloc(files[fileIndex].data, files[fileIndex].size + 1));
     memcpy(files[fileIndex].data + offset, buf, size);
     RETURN(size);
 }
