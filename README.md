@@ -9,11 +9,9 @@ dann die Funktionalität des
 bereitstellen. Das lässt sich mit den folgenden Kommandos ausprobieren (dabei 
 `<pfad-zum-dateisystem>` durch das Verzeichnis mit dem Template ersetzen):
 
-	mkdir -p build
-	cd build && cmake .. && cd ..
+	cmake CMakeLists.txt
 	make
-	# optional:
-	mkdir mount
+	mkdir -p mount
 	bin/mount.myfs mount -l log.txt
 
 Folgende Informationen können noch hilfreich sein:
