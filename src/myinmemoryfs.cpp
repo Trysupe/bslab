@@ -155,14 +155,14 @@ int MyInMemoryFS::fuseGetattr(const char *path, struct stat *statbuf) {
 
     statbuf->st_uid = getuid();
     statbuf->st_gid = getgid();
-    statbuf->st_atime = time( NULL );
-    statbuf->st_mtime = time( NULL );
 
     // check parent directory
     if ( strcmp( path, "/" ) == 0 )
     {
         statbuf->st_nlink = 2;
         statbuf->st_mode = S_IFDIR | 0755;
+        statbuf->st_atime = time( NULL );
+        statbuf->st_mtime = time( NULL );
         RETURN(0);
     }
 
@@ -175,6 +175,8 @@ int MyInMemoryFS::fuseGetattr(const char *path, struct stat *statbuf) {
     statbuf->st_mode = S_IFREG | files[index].permission;
     MyFSFileInfo file = files[index];
     statbuf->st_size = file.size;
+    statbuf->st_atime = file.atime;
+    statbuf->st_mtime = file.mtime;
     statbuf->st_ctime = file.ctime;
     statbuf->st_nlink = 1;
 
@@ -247,8 +249,6 @@ int MyInMemoryFS::fuseOpen(const char *path, struct fuse_file_info *fileInfo) {
         return -ENOENT;
     }
 
-    MyFSFileInfo file = files[pathIndex];
-
     int openFileIndex = getNextFreeIndexOpenFiles();
     openFiles[openFileIndex] = pathIndex;
     openFileCount++;
@@ -279,17 +279,18 @@ int MyInMemoryFS::fuseRead(const char *path, char *buf, size_t size, off_t offse
     LOGF( "--> Trying to read %s, %lu, %lu\n", path, (unsigned long) offset, size );
 
     int index = openFiles[fileInfo->fh];
-    MyFSFileInfo file = files[index];
 
     // if the offset is bigger than the file, return 0 for error
-    if(offset >= file.size) {
+    if(offset >= files[index].size) {
         return 0;
     }
 
-    if((offset + size) > file.size) {
-        size = file.size - offset;
+    if((offset + size) > files[index].size) {
+        size = files[index].size - offset;
     }
-    memcpy( buf, file.data + offset, size );
+    memcpy( buf, files[index].data + offset, size );
+
+    time(&(files[index].atime));
 
     RETURN(size);
 }
@@ -326,6 +327,10 @@ int MyInMemoryFS::fuseWrite(const char *path, const char *buf, size_t size, off_
     // change size of data to new size and write new contents
     files[fileIndex].data = (char*)(realloc(files[fileIndex].data, files[fileIndex].size + 1));
     memcpy(files[fileIndex].data + offset, buf, size);
+
+    time(&(files[fileIndex].mtime));
+    time(&(files[fileIndex].ctime));
+
     RETURN(size);
 }
 
@@ -520,6 +525,9 @@ int MyInMemoryFS::truncate(int fileIndex, off_t newSize) {
             files[fileIndex].data[offset + i] = '\0';
         }
     }
+    time(&(files[fileIndex].mtime));
+    time(&(files[fileIndex].ctime));
+
 
     return 0;
 }
