@@ -71,7 +71,9 @@ int MyInMemoryFS::fuseMknod(const char *path, mode_t mode, dev_t dev) {
     LOGM();
 
     // verify the file path
-    // NOTE: this worked before changing fuseReaddir
+    if (getIndex(path) != -1) {
+        return -EEXIST;
+    }
     if (strlen(path) > NAME_LENGTH) {
         return -ENAMETOOLONG;
     }
@@ -125,6 +127,9 @@ int MyInMemoryFS::fuseRename(const char *path, const char *newpath) {
     // check if new name is valid
     if (strlen((newpath + 1)) > NAME_LENGTH) {
         return -ENAMETOOLONG;
+    }
+    if (getIndex(newpath) != -1) {
+        return -EEXIST;
     }
 
     // if there's a file at path, start renaming
@@ -233,7 +238,14 @@ int MyInMemoryFS::fuseChown(const char *path, uid_t uid, gid_t gid) {
 int MyInMemoryFS::fuseOpen(const char *path, struct fuse_file_info *fileInfo) {
     LOGM();
 
+    if (openFileCount == NUM_OPEN_FILES) {
+        return -EMFILE;
+    }
+
     int pathIndex = getIndex(path);
+    if (pathIndex == -1) {
+        return -ENOENT;
+    }
 
     MyFSFileInfo file = files[pathIndex];
 
@@ -299,6 +311,11 @@ int MyInMemoryFS::fuseRead(const char *path, char *buf, size_t size, off_t offse
 /// \return Number of bytes written on success, -ERRNO on failure.
 int MyInMemoryFS::fuseWrite(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) {
     LOGM();
+
+    // verify open file handler
+    if(openFiles[fileInfo->fh] == -ENOENT) {
+        return -EBADF;
+    }
 
     int fileIndex = openFiles[fileInfo->fh];
 
