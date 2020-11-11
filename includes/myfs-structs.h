@@ -13,6 +13,7 @@
 #define BLOCK_SIZE 512
 #define NUM_DIR_ENTRIES 64
 #define NUM_OPEN_FILES 64
+#define DATA_BLOCKS 4096  // 4096*512KB = 2097152 which approx. to 2 GB total FS size
 
 typedef struct {
     char name[NAME_LENGTH];
