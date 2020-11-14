@@ -9,12 +9,17 @@
 #ifndef myfs_structs_h
 #define myfs_structs_h
 
+#include <sys/stat.h>  // copied from blockdevice.cpp (why is this in cpp? >.<)
+#include "blockdevice.h"
+
 #define NAME_LENGTH 255
 #define BLOCK_SIZE 512
 #define NUM_DIR_ENTRIES 64
 #define NUM_OPEN_FILES 64
 #define DATA_BLOCKS 4096  // 4096*512KB = 2097152 which approx. to 2 GB total FS size
 
+// this becomes obsolete for the ondiskfs as the data pointer
+// is not required anymore and we now know how stat works
 typedef struct {
     char name[NAME_LENGTH];
     int size = 0;
@@ -35,6 +40,15 @@ typedef struct {
     char writeCache[BLOCK_SIZE];
     int writeCacheBlock = -1;
 } openFile;
+
+
+// We're using one Block per struct
+typedef struct {
+    char name[NAME_LENGTH];
+    struct stat stat = {};  // store file metadata
+    int firstBlock;  // index of first data block
+    int rootDirBlock;  // index of the data block for the metadata
+} rootFile;
 
 
 #endif /* myfs_structs_h */
