@@ -61,7 +61,8 @@ MyOnDiskFS::~MyOnDiskFS() {
 int MyOnDiskFS::fuseMknod(const char *path, mode_t mode, dev_t dev) {
     LOGM();
 
-    // TODO: [PART 2] Implement this!
+    rootFile *file = rootDir->createFile(path);
+//    this->rootDir->persist(file);
 
     RETURN(0);
 }
