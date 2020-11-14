@@ -6,7 +6,6 @@
 #define MYFS_FAT_H
 
 #include "myfs-structs.h"
-#include "blockdevice.h"
 
 class FAT {
 private:
