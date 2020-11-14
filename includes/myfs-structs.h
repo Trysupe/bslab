@@ -11,6 +11,9 @@
 
 #include <sys/stat.h>  // copied from blockdevice.cpp (why is this in cpp? >.<)
 #include "blockdevice.h"
+#include <cstring>
+#include <unistd.h>
+#include <ctime>
 
 #define NAME_LENGTH 255
 #define BLOCK_SIZE 512
