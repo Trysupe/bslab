@@ -34,21 +34,22 @@ typedef struct {
 
 } MyFSFileInfo;
 
-typedef struct {
-    char readCache[BLOCK_SIZE];
-    int readCacheBlock = -1;
-    char writeCache[BLOCK_SIZE];
-    int writeCacheBlock = -1;
-} openFile;
-
-
-// We're using one Block per struct
+// We're using one Block per struct to store the metadata
 typedef struct {
     char name[NAME_LENGTH];
     struct stat stat = {};  // store file metadata
     int firstBlock;  // index of first data block
     int rootDirBlock;  // index of the data block for the metadata
 } rootFile;
+
+// Information on opened files
+typedef struct {
+    char readCache[BLOCK_SIZE];
+    int readCacheBlock = -1;
+    char writeCache[BLOCK_SIZE];
+    int writeCacheBlock = -1;
+    rootFile *file;
+} openFile;
 
 
 #endif /* myfs_structs_h */
