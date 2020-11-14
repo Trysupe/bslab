@@ -30,7 +30,10 @@ MyOnDiskFS::MyOnDiskFS() : MyFS() {
     // create a block device object
     this->blockDevice= new BlockDevice(BLOCK_SIZE);
 
-    // TODO: [PART 2] Add your constructor code here
+    buffer = new char[BLOCK_SIZE];
+    dMap = new DMap(blockDevice);
+    fat = new FAT(blockDevice);
+    rootDir = new RootDir(blockDevice);
 
 }
 
@@ -41,7 +44,9 @@ MyOnDiskFS::~MyOnDiskFS() {
     // free block device object
     delete this->blockDevice;
 
-    // TODO: [PART 2] Add your cleanup code here
+    delete rootDir;
+    delete fat;
+    delete dMap;
 
 }
 
@@ -277,7 +282,7 @@ void* MyOnDiskFS::fuseInit(struct fuse_conn_info *conn) {
     if(this->logFile == NULL) {
         fprintf(stderr, "ERROR: Cannot open logfile %s\n", ((MyFsInfo *) fuse_get_context()->private_data)->logFile);
     } else {
-        // turn of logfile buffering
+        // turn off logfile buffering
         setvbuf(this->logFile, NULL, _IOLBF, 0);
 
         LOG("Starting logging...\n");
@@ -287,6 +292,11 @@ void* MyOnDiskFS::fuseInit(struct fuse_conn_info *conn) {
         LOGF("Container file name: %s", ((MyFsInfo *) fuse_get_context()->private_data)->contFile);
 
         int ret= this->blockDevice->open(((MyFsInfo *) fuse_get_context()->private_data)->contFile);
+
+        // Init the open files array
+        for (int i = 0; i < NUM_OPEN_FILES; i++) {
+            openFiles[i] = nullptr;
+        }
 
         if(ret >= 0) {
             LOG("Container file does exist, reading");

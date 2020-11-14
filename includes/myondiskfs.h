@@ -8,10 +8,22 @@
 
 #include "myfs.h"
 
+#include "RootDir.h"
+#include "DMap.h"
+#include "FAT.h"
+
 /// @brief On-disk implementation of a simple file system.
 class MyOnDiskFS : public MyFS {
 protected:
-    // BlockDevice blockDevice;
+    BlockDevice *blockDevice;  // added pointer because error from CLion
+    char *buffer;
+    RootDir *rootDir;
+    DMap *dMap;
+    FAT *fat;
+
+    int openFileCount = 0;
+    openFile *openFiles[NUM_OPEN_FILES];
+
 
 public:
     static MyOnDiskFS *Instance();
