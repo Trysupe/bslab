@@ -17,10 +17,10 @@ public:
     RootDir(BlockDevice *device);
     ~RootDir();
 
-    rootFile *createFile(char *path);
+    rootFile *createFile(const char *path);
     void deleteFile(rootFile *file);
 
-    rootFile *getFile(char *path);
+    rootFile *getFile(const char *path);
     int getFilesCount();
     rootFile **getFiles();
 

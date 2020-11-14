@@ -106,7 +106,26 @@ int MyOnDiskFS::fuseRename(const char *path, const char *newpath) {
 int MyOnDiskFS::fuseGetattr(const char *path, struct stat *statbuf) {
     LOGM();
 
-    // TODO: [PART 2] Implement this!
+    // Get metadata from root folder
+    if (strcmp(path, "/") == 0) {
+        statbuf->st_mode = S_IFDIR | 0755;
+        statbuf->st_nlink = 2;
+        statbuf->st_uid = getuid();
+        statbuf->st_gid = getgid();
+        statbuf->st_atime = time(nullptr);
+        statbuf->st_mtime = time(nullptr);
+        return 0;
+    }
+
+    // If path requested is not the root ('/') get the file via path
+    rootFile *file = rootDir->getFile(path);
+
+    if (file == nullptr) {
+        return -ENOENT;
+    }
+
+    // Copy new struct into buffer
+    memcpy(statbuf, &file->stat, sizeof(*statbuf));
 
     RETURN(0);
 }
@@ -266,8 +285,20 @@ int MyOnDiskFS::fuseTruncate(const char *path, off_t newSize, struct fuse_file_i
 int MyOnDiskFS::fuseReaddir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fileInfo) {
     LOGM();
 
-    // TODO: [PART 2] Implement this!
+    // Dir self reference
+    filler(buf, ".", NULL, 0);
+    // Reference to parent directory
+    filler(buf, "..", NULL, 0);
 
+    // Since we only have one root directory we do not have to check for a directory
+    rootFile **files = rootDir->getFiles();
+    for (int i = 0; i < NUM_DIR_ENTRIES; i++) {
+        if (files[i] != nullptr) {
+            struct stat s = {};
+            fuseGetattr(files[i]->name, &s);
+            filler(buf, files[i]->name, &s, 0);
+        }
+    }
     RETURN(0);
 }
 

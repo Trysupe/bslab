@@ -15,7 +15,7 @@ RootDir::~RootDir() {
 }
 
 // create a file from given path
-rootFile *RootDir::createFile(char *path) {
+rootFile *RootDir::createFile(const char *path) {
     return nullptr;
 }
 
@@ -25,7 +25,7 @@ void RootDir::deleteFile(rootFile *file) {
 }
 
 // get a file at given path
-rootFile *RootDir::getFile(char *path) {
+rootFile *RootDir::getFile(const char *path) {
     return nullptr;
 }
 
@@ -36,7 +36,7 @@ int RootDir::getFilesCount() {
 
 // get the array of all existing files
 rootFile **RootDir::getFiles() {
-    return nullptr;
+    return files;
 }
 
 // load the file at given RootDir index
