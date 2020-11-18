@@ -362,7 +362,9 @@ void* MyOnDiskFS::fuseInit(struct fuse_conn_info *conn) {
         if(ret >= 0) {
             LOG("Container file does exist, reading");
 
-            // TODO: [PART 2] Read existing structures form file
+            dMap->initDMap();
+            fat->initFAT();
+            rootDir->initRootDir();
 
         } else if(ret == -ENOENT) {
             LOG("Container file does not exist, creating a new one");

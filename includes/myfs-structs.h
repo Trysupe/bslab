@@ -35,6 +35,8 @@
 // offset for actual data blocks
 #define DATA_OFFSET ROOT_DIR_OFFSET + ROOT_DIR_SIZE
 
+// define the total amount of blocks given to the FS
+#define TOTAL_FS_BLOCKS DMAP_SIZE + FAT_SIZE + ROOT_DIR_SIZE + DATA_BLOCKS
 
 
 // this becomes obsolete for the ondiskfs as the data pointer
