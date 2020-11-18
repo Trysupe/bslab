@@ -93,8 +93,24 @@ int MyOnDiskFS::fuseUnlink(const char *path) {
 int MyOnDiskFS::fuseRename(const char *path, const char *newpath) {
     LOGM();
 
-    // TODO: [PART 2] Implement this!
+    // verify name length
+    if (strlen((newpath + 1)) > NAME_LENGTH) {
+        return -ENAMETOOLONG;
+    }
 
+    rootFile *file = rootDir->getFile(path);
+    // file does not exist
+    if (file == nullptr) {
+        return -ENOENT;
+    }
+
+    // check if file already exists
+    if (rootDir->getFile(newpath) != nullptr) {
+        return -EEXIST;
+    }
+
+    strcpy(file->name, newpath + 1);
+//    rootDir->persist(file);
     RETURN(0);
 }
 
