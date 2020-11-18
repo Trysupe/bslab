@@ -157,7 +157,13 @@ int MyOnDiskFS::fuseGetattr(const char *path, struct stat *statbuf) {
 int MyOnDiskFS::fuseChmod(const char *path, mode_t mode) {
     LOGM();
 
-    // TODO: [PART 2] Implement this!
+    rootFile* file = rootDir->getFile(path);
+    if (file == nullptr) {
+        return -ENOENT;
+    }
+
+    file->stat.st_mode = mode;
+//    rootDir->persist(file);
 
     RETURN(0);
 }
@@ -173,7 +179,14 @@ int MyOnDiskFS::fuseChmod(const char *path, mode_t mode) {
 int MyOnDiskFS::fuseChown(const char *path, uid_t uid, gid_t gid) {
     LOGM();
 
-    // TODO: [PART 2] Implement this!
+    rootFile* file = rootDir->getFile(path);
+    if (file == nullptr) {
+        return -ENOENT;
+    }
+
+    file->stat.st_uid = uid;
+    file->stat.st_gid = gid;
+//    rootDir->persist(file);
 
     RETURN(0);
 }
