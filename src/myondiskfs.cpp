@@ -371,7 +371,9 @@ void* MyOnDiskFS::fuseInit(struct fuse_conn_info *conn) {
 
             if (ret >= 0) {
 
-                // TODO: [PART 2] Create empty structures in file
+                dMap->initialInitDMap();
+                fat->initialInitFAT();
+                rootDir->initialInitRootDir();
 
             }
         }

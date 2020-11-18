@@ -6,7 +6,10 @@
 
 // RootDir constructor
 RootDir::RootDir(BlockDevice *device) {
-
+    this->device = device;
+    for (int i = 0; i < NUM_DIR_ENTRIES; i++) {
+        files[i] = nullptr;
+    }
 }
 
 // RootDir destructor
@@ -89,5 +92,9 @@ void RootDir::initRootDir() {
 
 // initialise the RootDir content for an empty filesystem
 void RootDir::initialInitRootDir() {
-
+    char buffer[BLOCK_SIZE];
+    for (int i = 0; i < NUM_DIR_ENTRIES; i++) {
+        memset(buffer, 0, BLOCK_SIZE);
+        device->write(ROOT_DIR_OFFSET + i, buffer);
+    }
 }

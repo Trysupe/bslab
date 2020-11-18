@@ -21,6 +21,22 @@
 #define NUM_OPEN_FILES 64
 #define DATA_BLOCKS 4096  // 4096*512KB = 2097152 which approx. to 2 GB total FS size
 
+
+#define DMAP_OFFSET 0  // specify where to start if we want to add a superblock later
+#define DMAP_SIZE 16  // 8KB should be plenty to store dmap values
+
+#define FAT_OFFSET DMAP_OFFSET + DMAP_SIZE
+#define FAT_SIZE 512
+#define FAT_EOF -1    // set a terminator to mark a last block of a file
+
+#define ROOT_DIR_OFFSET FAT_OFFSET + FAT_SIZE
+#define ROOT_DIR_SIZE 64
+
+// offset for actual data blocks
+#define DATA_OFFSET ROOT_DIR_OFFSET + ROOT_DIR_SIZE
+
+
+
 // this becomes obsolete for the ondiskfs as the data pointer
 // is not required anymore and we now know how stat works
 typedef struct {

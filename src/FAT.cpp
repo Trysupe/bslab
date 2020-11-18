@@ -6,7 +6,10 @@
 
 // Constructor for the FAT
 FAT::FAT(BlockDevice *device) {
-
+    this->device = device;
+    for (int i = 0; i < DATA_BLOCKS; i++) {
+        fatArray[i] = FAT_EOF;
+    }
 }
 
 // Destructor for the FAT
@@ -41,6 +44,10 @@ void FAT::initFAT() {
 
 // initialise a FAT for an empty filesystem
 void FAT::initialInitFAT() {
-
+    char buffer[BLOCK_SIZE];
+    for (int i = 0; i < FAT_SIZE; i++) {
+        memcpy(buffer, fatArray, BLOCK_SIZE);
+        device->write(FAT_OFFSET + i, buffer);
+    }
 }
 

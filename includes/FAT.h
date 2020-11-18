@@ -10,7 +10,9 @@
 class FAT {
 private:
     BlockDevice *device;
-    int fatArray[NUM_DIR_ENTRIES][DATA_BLOCKS];  // keep track of the next data block assigned to this file
+    // map the entry to the next corresponding data block of a file
+    // and write 'FAT_EOF' to mark the last block of a file
+    int fatArray[DATA_BLOCKS];
     int modifiedBlocks[];  // keep track of the modified blocks currently held in memory
 public:
     FAT(BlockDevice *device);
