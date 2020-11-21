@@ -54,6 +54,7 @@ public:
     virtual void fuseDestroy();
 
     // TODO: Add methods of your file system here
+    int getNextFreeIndexOpenFiles();
 
 };
 

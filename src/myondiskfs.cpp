@@ -236,7 +236,29 @@ int MyOnDiskFS::fuseChown(const char *path, uid_t uid, gid_t gid) {
 int MyOnDiskFS::fuseOpen(const char *path, struct fuse_file_info *fileInfo) {
     LOGM();
 
-    // TODO: [PART 2] Implement this!
+    // Check if another open file is allowed
+    if (openFileCount == NUM_OPEN_FILES) {
+        return -EMFILE;
+    }
+
+    rootFile *file = rootDir->getFile(path);
+    if (file == nullptr) {
+        return -ENOENT;
+    }
+
+    openFileCount++;
+
+    int openFileIndex = getNextFreeIndexOpenFiles();
+
+    // Create a new openFile object from the file specified by the path
+    openFile* openFile = new ::openFile();
+    openFile->file = file;
+
+    // Add it to the array
+    openFiles[openFileIndex] = openFile;
+
+    // Update the index in the fuse file object
+    fileInfo->fh = openFileIndex;
 
     RETURN(0);
 }
@@ -298,6 +320,11 @@ int MyOnDiskFS::fuseRelease(const char *path, struct fuse_file_info *fileInfo) {
     LOGM();
 
     // TODO: [PART 2] Implement this!
+
+    int openFileIndex = fileInfo->fh;
+    delete openFiles[openFileIndex];
+    openFiles[openFileIndex] = nullptr;
+    openFileCount--;
 
     RETURN(0);
 }
@@ -434,6 +461,14 @@ void MyOnDiskFS::fuseDestroy() {
 
 // TODO: [PART 2] You may add your own additional methods here!
 
+int MyOnDiskFS::getNextFreeIndexOpenFiles() {
+    for (int i = 0; i < NUM_OPEN_FILES; i++) {
+        if (openFiles[i] == nullptr) {
+            return i;
+        }
+    }
+    return -1;
+}
 // DO NOT EDIT ANYTHING BELOW THIS LINE!!!
 
 /// @brief Set the static instance of the file system.
