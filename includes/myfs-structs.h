@@ -30,7 +30,7 @@
 #define FAT_EOF -1    // set a terminator to mark a last block of a file
 
 #define ROOT_DIR_OFFSET FAT_OFFSET + FAT_SIZE
-#define ROOT_DIR_SIZE 64
+#define ROOT_DIR_SIZE NUM_DIR_ENTRIES
 
 // offset for actual data blocks
 #define DATA_OFFSET ROOT_DIR_OFFSET + ROOT_DIR_SIZE
