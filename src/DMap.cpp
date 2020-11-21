@@ -16,8 +16,8 @@ DMap::~DMap() {
 }
 
 // return index of the next free data block available
-int DMap::getNextFreeBlock() {
-    for (int i = 0; i < DATA_BLOCKS; i++) {
+int DMap::getNextFreeBlock(int starting_index) {
+    for (int i = starting_index; i < DATA_BLOCKS; i++) {
         if (!getBlockState(i)) {
             setBlockState(i, true);  // set the new state
             return i;
@@ -32,7 +32,7 @@ int* DMap::getXAmountOfFreeBlocks(int amount) {
     int* freeBlockArray = new int[amount];
 
     for (int i = 0; i < amount; i++) {
-        int freeBlockIndex = this->getNextFreeBlock();
+        int freeBlockIndex = this->getNextFreeBlock(DATA_OFFSET);
         if (freeBlockIndex >= 1) {
             freeBlockArray[i] = freeBlockIndex;
         } else {
