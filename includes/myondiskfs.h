@@ -55,6 +55,8 @@ public:
 
     // TODO: Add methods of your file system here
     int getNextFreeIndexOpenFiles();
+    int readFile(int *blocks, int blockCount, int offset, size_t size, char *buf, openFile *file);
+    int writeFile(int *blocks, int blockCount, int offset, size_t size, const char *buf, openFile *file);
 
 };
 

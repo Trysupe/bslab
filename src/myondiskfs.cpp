@@ -283,7 +283,69 @@ int MyOnDiskFS::fuseOpen(const char *path, struct fuse_file_info *fileInfo) {
 int MyOnDiskFS::fuseRead(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) {
     LOGM();
 
-    // TODO: [PART 2] Implement this!
+    // check whether there is an open file
+    if (openFiles[fileInfo->fh] == nullptr) {
+        return -EBADF;
+    }
+
+    // If so write it to the root file obj
+    rootFile* file = openFiles[fileInfo->fh]->file;
+
+    // Nothing to read because the user wants to read outside of the file content
+    if (offset >= file->stat.st_size) {
+        return 0;
+    }
+
+    // offset is in range but size (the amount of bytes to read) is too big,
+    // we only want to read in the defined file and not outside
+    if ((off_t) (offset + size) > file->stat.st_size) {
+        size = file->stat.st_size - offset;
+    }
+
+    // number of blocks to read
+    int blockCount;
+
+    // filesize is exactly multiple of BLOCK_SIZE
+    if (size % BLOCK_SIZE == 0) {
+        blockCount = size / BLOCK_SIZE;
+    } else {
+        blockCount = size / BLOCK_SIZE + 1;
+    }
+
+    // If offset is bigger than BLOCK_SIZE we read some block in the chain,
+    // determine how many blocks we need to skip
+    int blockOffset = offset / BLOCK_SIZE;
+
+    // now skip the blocks
+    int currentBlock = file->firstBlock;
+    for (int i = 0; i < blockOffset; i++) {
+        currentBlock = fat->getNextBlock(currentBlock);
+    }
+
+    // construct chain of blocks that need to be read
+    int* blocks = new int[blockCount];
+    blocks[0] = currentBlock;
+    for (int i = 1; i < blockCount; i++) {
+        currentBlock = fat->getNextBlock(currentBlock);
+        blocks[i] = currentBlock;
+    }
+
+    // read the file
+    int err = readFile(blocks, blockCount, offset % BLOCK_SIZE, size, buf, openFiles[fileInfo->fh]);
+
+    // if an error occurred return error
+    if (err != 0) {
+        return -EIO;
+    }
+
+    // if not update the file because of the new a_time
+    file->stat.st_atime = time(nullptr);
+
+
+//    this->rootDir->persist(file);
+
+    // We dont want to store the temp blocks
+    delete[] blocks;
 
     RETURN(0);
 }
@@ -306,7 +368,100 @@ int MyOnDiskFS::fuseRead(const char *path, char *buf, size_t size, off_t offset,
 int MyOnDiskFS::fuseWrite(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) {
     LOGM();
 
-    // TODO: [PART 2] Implement this!
+    // verify that file is opened
+    if (openFiles[fileInfo->fh] == nullptr) {
+        return -EBADF;
+    }
+    rootFile* file = openFiles[fileInfo->fh]->file;
+
+
+    // first, collect information about how many & which blocks
+    // to use to store the data to be written
+
+    // Number of blocks to write
+    int blockCount;
+    if (size % BLOCK_SIZE == 0) {
+        blockCount = size / BLOCK_SIZE;
+    } else {
+        blockCount = size / BLOCK_SIZE + 1;
+    }
+
+    // offset block to start writing on existing files
+    int blockOffset = offset / BLOCK_SIZE;
+
+    // if the existing file gets bigger, append to existing block
+    int blockCountDelta = blockOffset + blockCount - file->stat.st_blocks;
+
+    if (blockCountDelta > 0) {
+        // Is there enough space to write?
+        if (dMap->getFreeBlockCounter() < blockCountDelta) {
+            return -ENOSPC;
+        }
+
+        // create array of free blocks, according to size of the data we're writing
+        int* newBlocks = dMap->getXAmountOfFreeBlocks(blockCountDelta);
+        // file is new or empty
+        if (file->firstBlock == -1) {
+            file->firstBlock = newBlocks[0];
+        } else {
+            // connect the last block of the file to new blocks
+            int currentBlock = file->firstBlock;
+            // get end of chain
+            while (fat->getNextBlock(currentBlock) != FAT_EOF) {
+                currentBlock = fat->getNextBlock(currentBlock);
+            }
+            fat->setNextBlock(currentBlock, newBlocks[0]);
+        }
+
+        // store the chain of blocks in fat
+        for (int i = 1; i < blockCountDelta; i++) {
+            fat->setNextBlock(newBlocks[i - 1], newBlocks[i]);
+        }
+
+        // assign used blocks in dmap
+        for (int i = 0; i < blockCountDelta; i++) {
+            dMap->setBlockState(newBlocks[i], true);
+        }
+
+        delete[] newBlocks;
+        file->stat.st_blocks = blockOffset + blockCount;
+    }
+
+
+    // write new file size
+    if ((off_t) (offset + size) > file->stat.st_size) {
+        file->stat.st_size = offset + size;
+    }
+
+    int currentBlock = file->firstBlock;
+    // Move to offset - in case of writing to existing file
+    for (int i = 0; i < blockOffset; i++) {
+        currentBlock = fat->getNextBlock(currentBlock);
+    }
+
+    // Collect blocks to write
+    int* blocks = new int[blockCount];
+    blocks[0] = currentBlock;
+    for (int i = 1; i < blockCount; i++) {
+        currentBlock = fat->getNextBlock(currentBlock);
+        blocks[i] = currentBlock;
+    }
+
+    // pass to function to write blocks
+    int err = writeFile(blocks, blockCount, offset % BLOCK_SIZE, size, buf, openFiles[fileInfo->fh]);
+
+    // verify
+    if (err != 0) {
+        return -EIO;
+    }
+    // and set the new timestamps
+    file->stat.st_mtime = time(nullptr);
+    file->stat.st_ctime = time(nullptr);
+
+    // persist the changes
+//    dMap->persist();
+//    fat->persist();
+//    rootDir->persist(file);
 
     RETURN(0);
 }
@@ -461,6 +616,131 @@ void MyOnDiskFS::fuseDestroy() {
 
 // TODO: [PART 2] You may add your own additional methods here!
 
+/// @param [*blocks] is an array of blocks with data
+/// @param [blockCount] how many blocks are in *blocks
+/// @param [size] how many bytes do we need to write
+/// @brief Helper method to write a file on disk
+/// @return 0 on success, -1 on failure
+int MyOnDiskFS::writeFile(int *blocks, int blockCount, int offset, size_t size, const char *buf, openFile *file) {
+
+    // write all blocks given by the counter
+    for (int i = 0; i < blockCount; i++) {
+        memset(buffer, 0, BLOCK_SIZE);
+
+        // is data that gets written stored in cache?
+        if (i == 0 && file->writeCacheBlock == ((int32_t) blocks[i])) {
+            memcpy(buffer, file->writeCache, BLOCK_SIZE);
+        } else {
+            blockDevice->read(blocks[i], buffer);
+        }
+        size_t bufOffset = i * BLOCK_SIZE;
+        size_t tempSize;
+
+        // First block
+        if (i == 0) {
+            // if there's enough space in this block for the data
+            if ((size_t) (offset + size) < (size_t) (BLOCK_SIZE - offset)) {
+                tempSize = size;
+            } else {
+                tempSize = BLOCK_SIZE - offset;
+            }
+            // remaining space in this block
+            memcpy(buffer + offset, buf, tempSize);
+
+        // Other blocks
+        } else {
+            // if remaining data is smaller than block_size
+            if (size < BLOCK_SIZE) {
+                tempSize = size;
+            } else {
+                tempSize = BLOCK_SIZE;
+            }
+            memcpy(buffer, buf + bufOffset, tempSize);
+        }
+
+        // Store new size
+        size -= tempSize;
+
+        // last block
+        if (i == blockCount - 1) {
+            // Caching last written block
+            file->writeCacheBlock = blocks[i];
+            memcpy(file->writeCache, buffer, BLOCK_SIZE);
+        }
+
+        blockDevice->write(blocks[i], buffer);
+    }
+
+    if (size != 0) {
+        return -1;
+    }
+    return 0;
+
+}
+
+
+/// @brief Helper method to read a file from disk
+/// @return 0 on success, -1 on failure
+int MyOnDiskFS::readFile(int *blocks, int blockCount, int offset, size_t size, char *buf, openFile *file) {
+
+    // Read all blocks given by the block counter
+    for (int i = 0; i < blockCount; i++) {
+
+        // make sure the buffer is not filled with old stuff
+        memset(buffer, 0, BLOCK_SIZE);
+
+
+        // is the data that needs to be read available in cache?
+        if (i == 0 && file->readCacheBlock == ((int) blocks[0])) {
+            memcpy(buffer, file->readCache, BLOCK_SIZE);
+        } else {
+            blockDevice->read(DATA_OFFSET + blocks[i], buffer);
+        }
+
+        size_t bufferOffset = i * BLOCK_SIZE;
+        size_t temporarySize;
+        // first block
+        if (i == 0) {
+            // does blocks[0] fit in current block?
+            if ((size_t) (offset + size) < (size_t) (BLOCK_SIZE - offset)) {
+                temporarySize = size;
+            } else {
+                temporarySize = BLOCK_SIZE - offset;
+            }
+
+            memcpy(buf, buffer + offset, size);
+
+        // remaining blocks
+        } else {
+            // if remaining data fits in one block
+            if (size < BLOCK_SIZE) {
+                temporarySize = size;
+            } else {
+                temporarySize = BLOCK_SIZE;
+            }
+            memcpy(buf + bufferOffset, buffer, temporarySize);
+        }
+        // update the remaining bytes to read
+        size -= temporarySize;
+
+        // last block
+        if (i == blockCount - 1) {
+            // and store it in cache
+            file->readCacheBlock = blocks[i];
+            memcpy(file->readCache, buffer, BLOCK_SIZE);
+        }
+    }
+
+    // if the file could not be read correctly and the size is not set to 0 return error
+    if (size != 0) {
+        return -1;
+    }
+
+    return 0;
+}
+
+
+/// @brief return the next index to track opened files
 int MyOnDiskFS::getNextFreeIndexOpenFiles() {
     for (int i = 0; i < NUM_OPEN_FILES; i++) {
         if (openFiles[i] == nullptr) {
@@ -469,6 +749,7 @@ int MyOnDiskFS::getNextFreeIndexOpenFiles() {
     }
     return -1;
 }
+
 // DO NOT EDIT ANYTHING BELOW THIS LINE!!!
 
 /// @brief Set the static instance of the file system.
