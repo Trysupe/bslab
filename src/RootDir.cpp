@@ -18,7 +18,7 @@ RootDir::~RootDir() {
 }
 
 // create a file from given path
-rootFile *RootDir::createFile(const char *path) {
+rootFile* RootDir::createFile(const char *path) {
     path++;  // remove path slash
 
     int index = 0;
@@ -51,11 +51,18 @@ rootFile *RootDir::createFile(const char *path) {
 
 // delete a file from given rootFile
 void RootDir::deleteFile(rootFile *file) {
-
+    int index = 0;
+    while (files[index] != file) {
+        index++;
+    }
+    delete file;
+    // set to nullptr in files array
+    files[index] = nullptr;
+    existingFilesCounter--;
 }
 
 // get a file at given path
-rootFile *RootDir::getFile(const char *path) {
+rootFile* RootDir::getFile(const char *path) {
     path++;  // shove dir slash
     for (int i = 0; i < NUM_DIR_ENTRIES; i++) {
         if (files[i] != nullptr && strcmp(path, files[i]->name) == 0) {
@@ -67,16 +74,16 @@ rootFile *RootDir::getFile(const char *path) {
 
 // get the counter of all files created
 int RootDir::getFilesCount() {
-    return 0;
+    return existingFilesCounter;
 }
 
 // get the array of all existing files
-rootFile **RootDir::getFiles() {
+rootFile** RootDir::getFiles() {
     return files;
 }
 
 // load the file at given RootDir index
-rootFile *RootDir::load(int index) {
+rootFile* RootDir::load(int index) {
     char buff[BLOCK_SIZE];
     memset(buff, 0, BLOCK_SIZE);
     this->device->read(ROOT_DIR_OFFSET + index, buff);
