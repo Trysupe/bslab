@@ -17,19 +17,54 @@ FAT::~FAT() {
 
 }
 
+void FAT::insertModifiedBlock(int index) {
+
+    // 1. verify that index is not present already
+    bool indexIsPresent = false;
+    for (int i = 0; i < modifiedBlocksCounter; i++) {
+        if (modifiedBlocks[i] == index) {
+            indexIsPresent = true;
+        }
+    }
+
+    // then track the change
+    if (!indexIsPresent) {
+        modifiedBlocks[modifiedBlocksCounter + 1] = index;
+        modifiedBlocksCounter++;
+    }
+}
+
+void FAT::clearModifiedBlocks() {
+    for (int i = 0; i < modifiedBlocksCounter; i++) {
+        modifiedBlocks[i] = 0;
+        modifiedBlocksCounter = 0;
+    }
+}
+
+
+
 // map the next block for the current file
 int FAT::setNextBlock(int currentBlock, int nextBlock) {
+
+    if (currentBlock == nextBlock) {
+        return -1;
+    }
+
+    this->fatArray[currentBlock] = nextBlock;
+    insertModifiedBlock(currentBlock);
+    insertModifiedBlock(nextBlock);
     return 0;
 }
 
-// return the index of the next available block
-int FAT::getNextFreeBlock(int currentBlock) {
-    return 0;
+// return the index of the next block in the chain
+int FAT::getNextBlock(int currentBlock) {
+    return this->fatArray[currentBlock];
 }
 
 // clean the content of a block by its index
-void FAT::freeBlock(int block) {
-
+void FAT::freeBlock(int index) {
+    this->fatArray[index] = FAT_EOF;
+    insertModifiedBlock(index);
 }
 
 // write the changes to the disk
