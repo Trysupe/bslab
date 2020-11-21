@@ -39,7 +39,11 @@ void FAT::persist() {
 
 // initialise the (existing) FAT
 void FAT::initFAT() {
-
+    char buffer[BLOCK_SIZE];
+    for (int i = FAT_OFFSET; i < FAT_OFFSET + FAT_SIZE; i++) {
+        device->read(i, buffer);
+        memcpy(fatArray, buffer, BLOCK_SIZE);
+    }
 }
 
 // initialise a FAT for an empty filesystem

@@ -1,6 +1,7 @@
 //
 // Created by user on 11.11.20.
 //
+#include "FShelper.h"
 #include "myfs-structs.h"
 
 #ifndef MYFS_ROOTDIR_H

@@ -77,7 +77,18 @@ rootFile **RootDir::getFiles() {
 
 // load the file at given RootDir index
 rootFile *RootDir::load(int index) {
-    return nullptr;
+    char buff[BLOCK_SIZE];
+    memset(buff, 0, BLOCK_SIZE);
+    this->device->read(ROOT_DIR_OFFSET + index, buff);
+
+    if (!FShelper::checkBlockContent(buff)) {
+        rootFile *file = new rootFile();
+        std::memcpy(file, buff, sizeof(rootFile));
+        this->files[index] = file;
+        return file;
+    } else {
+        return nullptr;
+    }
 }
 
 // write the changes to disk
@@ -87,7 +98,13 @@ bool RootDir::persist(rootFile *file) {
 
 // load the files after opening an existing file container
 void RootDir::initRootDir() {
-
+    for (int i = ROOT_DIR_OFFSET; i < ROOT_DIR_OFFSET + ROOT_DIR_SIZE; i++) {
+        rootFile *file = load(i);
+        files[i] = file;
+        if (file != nullptr) {
+            existingFilesCounter++;
+        }
+    }
 }
 
 // initialise the RootDir content for an empty filesystem
