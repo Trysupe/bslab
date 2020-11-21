@@ -21,7 +21,7 @@ add_executable(mount.myfs src/blockdevice.cpp
         src/DMap.cpp
         src/FAT.cpp
         src/RootDir.cpp
-        )
+        src/FShelper.cpp)
 
 add_executable(unittests src/blockdevice.cpp
         src/myfs.cpp
@@ -39,7 +39,7 @@ add_executable(integrationtests
         src/myondiskfs.cpp
         testing/main.cpp
         testing/itest.cpp
-        testing/tools.cpp)
+        testing/tools.cpp includes/FShelper.h)
 
 find_package(PkgConfig)
 pkg_check_modules(FUSE fuse)

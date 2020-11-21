@@ -8,6 +8,7 @@
 
 #include "blockdevice.h"
 #include "myfs-structs.h"
+#include "FShelper.h"
 
 class DMap {
 private:

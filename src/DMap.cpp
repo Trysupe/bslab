@@ -63,31 +63,20 @@ void DMap::initDMap() {
     char buff[BLOCK_SIZE];
 
     // iterate over every block assigned to the dmap
-    for (int block_index = 0; block_index < DMAP_SIZE; block_index++) {
+    for (int block_index = DMAP_OFFSET; block_index < DMAP_OFFSET + DMAP_SIZE; block_index++) {
 
         // grab the block data
         memset(buff, 0, BLOCK_SIZE);
-        this->device->read(DMAP_OFFSET + block_index, buff);
+        this->device->read(block_index, buff);
 
-        // go over every byte from the blockdevice
-        for (int char_index = 0; char_index < BLOCK_SIZE; char_index++) {
-            // check every bit of given byte
-            for (int bit_index = 0; bit_index < 8; bit_index++) {
-
-                int index = DMAP_OFFSET + block_index;
-
-                // if anything is written here, then this block is not free
-                if ((buff[char_index] & (1 << (7 - bit_index))) != 0) {
-                    this->blocks[index] = true;
-                    // decrease by 1 and go onto the next block
-                    decreaseFreeBlockCounterBy(1);
-                    bit_index = 8;
-                    char_index = BLOCK_SIZE;
-                } else {
-                    this->blocks[index] = false;
-                }
-            }
+        if (!FShelper::checkBlockContent(buff)) {
+            this->blocks[block_index] = true;
+            decreaseFreeBlockCounterBy(1);
+        } else {
+            this->blocks[block_index] = false;
         }
+
+
     }
 }
 
