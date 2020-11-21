@@ -21,7 +21,7 @@ public:
     ~DMap();
 
     int getNextFreeBlock();
-    int getXAmountOfFreeBlocks(int amount);
+    int* getXAmountOfFreeBlocks(int amount);
 
     void setBlockState(int dataBlockNum, bool isUsed);
     bool getBlockState(int dataBlockNum);

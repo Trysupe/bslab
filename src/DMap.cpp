@@ -17,22 +17,45 @@ DMap::~DMap() {
 
 // return index of the next free data block available
 int DMap::getNextFreeBlock() {
-    return 0;
+    for (int i = 0; i < DATA_BLOCKS; i++) {
+        if (!getBlockState(i)) {
+            return i;
+        }
+    }
+    return -1;
 }
 
 // return an array containing indexes of a requested amount of data blocks
-int DMap::getXAmountOfFreeBlocks(int amount) {
-    return 0;
+int* DMap::getXAmountOfFreeBlocks(int amount) {
+
+    int* freeBlockArray = new int[amount];
+
+    for (int i = 0; i < amount; i++) {
+        int freeBlockIndex = getNextFreeBlock();
+        if (freeBlockIndex >= 1) {
+            freeBlockArray[i] = freeBlockIndex;
+        } else {
+            return nullptr;
+        }
+    }
+
+    decreaseFreeBlockCounterBy(amount);
+    return freeBlockArray;
 }
 
 // set the usage status of a data block to true/false
 void DMap::setBlockState(int dataBlockNum, bool isUsed) {
-
+    this->blocks[dataBlockNum] = isUsed;
+    if (isUsed) {
+        decreaseFreeBlockCounterBy(1);
+    } else {
+        increaseFreeBlockCounterBy(1);
+    }
 }
 
 // return the usage status of a data block
 bool DMap::getBlockState(int dataBlockNum) {
-    return false;
+    return this->blocks[dataBlockNum];
 }
 
 // increase the counter which keeps track of the total of free blocks by
