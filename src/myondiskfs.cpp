@@ -76,8 +76,42 @@ int MyOnDiskFS::fuseMknod(const char *path, mode_t mode, dev_t dev) {
 int MyOnDiskFS::fuseUnlink(const char *path) {
     LOGM();
 
-    // TODO: [PART 2] Implement this!
+    rootFile* file = rootDir->getFile(path);
 
+    // couldn't find file at that path
+    if (file == nullptr) {
+        return -ENOENT;
+    }
+
+    // go through fat and dmap and delete the chain
+    if (file->firstBlock != -1) {
+        int currentBlock = file->firstBlock;
+        int nextBlock = FAT_EOF;
+        do {
+            // Gets the next block
+            nextBlock = fat->getNextBlock(currentBlock);
+
+            // Sets bit to 0 to represent emtpy space
+            dMap->setBlockState(currentBlock, false);
+
+            // Deletes block
+            fat->freeBlock(currentBlock);
+
+            // Continues as long as fat is not at the end
+            currentBlock = nextBlock;
+        } while (nextBlock != FAT_EOF);
+    }
+
+//    dMap->persist();
+//    fat->persist();
+
+    // clear the metadata block of the file
+    char buff[BLOCK_SIZE];
+    memset(buff, 0, BLOCK_SIZE);
+    this->blockDevice->write(ROOT_DIR_OFFSET + file->rootDirBlock, buff);
+
+    // clear file from rootdir
+    rootDir->deleteFile(file);
     RETURN(0);
 }
 
