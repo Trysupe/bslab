@@ -19,6 +19,7 @@ DMap::~DMap() {
 int DMap::getNextFreeBlock() {
     for (int i = 0; i < DATA_BLOCKS; i++) {
         if (!getBlockState(i)) {
+            setBlockState(i, true);  // set the new state
             return i;
         }
     }
@@ -31,7 +32,7 @@ int* DMap::getXAmountOfFreeBlocks(int amount) {
     int* freeBlockArray = new int[amount];
 
     for (int i = 0; i < amount; i++) {
-        int freeBlockIndex = getNextFreeBlock();
+        int freeBlockIndex = this->getNextFreeBlock();
         if (freeBlockIndex >= 1) {
             freeBlockArray[i] = freeBlockIndex;
         } else {
@@ -39,7 +40,6 @@ int* DMap::getXAmountOfFreeBlocks(int amount) {
         }
     }
 
-    decreaseFreeBlockCounterBy(amount);
     return freeBlockArray;
 }
 
