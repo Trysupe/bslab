@@ -119,9 +119,11 @@ void FAT::persist() {
 // initialise the (existing) FAT
 void FAT::initFAT() {
     char buffer[BLOCK_SIZE];
-    for (int i = FAT_OFFSET; i < FAT_OFFSET + FAT_SIZE; i++) {
-        device->read(i, buffer);
-        memcpy(fatArray, buffer, BLOCK_SIZE);
+    for (int i = 0; i < FAT_SIZE; i++) {
+            int i_offset = i + FAT_OFFSET;
+            device->read(i_offset, buffer);
+            // TODO: find out how to reiterate the different blocks into same int pointer array
+            memcpy(fatArray, buffer, BLOCK_SIZE);
     }
 }
 
