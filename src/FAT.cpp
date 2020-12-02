@@ -85,7 +85,9 @@ void FAT::persist() {
     for (int i = 0; i <= iterate_x_times_to_reach_last_block_index; i++) {
 
         // go over each modified block (while doing so redundantly)
-        for (int j = 0; j < modifiedBlocksCounter; j++) {
+        // start at the second entry since the first entry always point to the second modified
+        // value and does not point anywhere if only one blockdevice is used
+        for (int j = 1; j < modifiedBlocksCounter; j++) {
 
             int current_block_index = modifiedBlocks[j] - data_offset;
 
@@ -93,15 +95,21 @@ void FAT::persist() {
             for (int k = 0; k < BLOCK_SIZE; k++) {
 
                 // if the iteration matches the modified block
-                if (k == current_block_index) {
+                //
+                if (k == modifiedBlocks[j-1] - data_offset) {
                     int counter_l = 0;  // counter count to assign last byte to the left
                     // write each byte to the buffer, start from the left
                     for (int l = 3; l >= 0; l--) {
+                        // write the next block pointer
                         int this_byte = (current_block_index >> (8*l)) & 0xff;
                         int buffer_offset = (k*4) + counter_l;
                         buffer[buffer_offset] = this_byte;
                         counter_l++;
+
                     }
+                } else {
+//                    TODO: properly mark the EOF entries
+//                    buffer[(k*4) + 3] = FAT_EOF;
                 }
             }
         }
