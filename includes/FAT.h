@@ -12,7 +12,7 @@ private:
     BlockDevice *device;
     // map the entry to the next corresponding data block of a file
     // and write 'FAT_EOF' to mark the last block of a file
-    int fatArray[DATA_BLOCKS];
+    int32_t fatArray[DATA_BLOCKS];
     int modifiedBlocks[DATA_BLOCKS];  // keep track of the modified blocks currently held in memory
     int modifiedBlocksCounter = 0;
 public:

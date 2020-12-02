@@ -17,16 +17,17 @@
 
 #define NAME_LENGTH 255
 #define BLOCK_SIZE 512
-#define NUM_DIR_ENTRIES 64
-#define NUM_OPEN_FILES 64
+#define NUM_DIR_ENTRIES 32
+#define NUM_OPEN_FILES NUM_DIR_ENTRIES
 #define DATA_BLOCKS 4096  // 4096*512KB = 2097152 which approx. to 2 GB total FS size
 
+#define BD_SIZE 0
 
-#define DMAP_OFFSET 0  // specify where to start if we want to add a superblock later
+#define DMAP_OFFSET BD_SIZE  // specify where to start if we want to add a superblock later
 #define DMAP_SIZE 10  // 8KB should be plenty to store dmap values
 
 #define FAT_OFFSET DMAP_OFFSET + DMAP_SIZE
-#define FAT_SIZE 512
+#define FAT_SIZE 64
 #define FAT_EOF -1    // set a terminator to mark a last block of a file
 
 #define ROOT_DIR_OFFSET FAT_OFFSET + FAT_SIZE
