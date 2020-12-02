@@ -97,14 +97,12 @@ void FAT::persist() {
                 // if the iteration matches the modified block
                 //
                 if (k == modifiedBlocks[j-1] - data_offset) {
-                    int counter_l = 0;  // counter count to assign last byte to the left
                     // write each byte to the buffer, start from the left
                     for (int l = 3; l >= 0; l--) {
                         // write the next block pointer
                         int this_byte = (current_block_index >> (8*l)) & 0xff;
-                        int buffer_offset = (k*4) + counter_l;
+                        int buffer_offset = (k*4) + l;
                         buffer[buffer_offset] = this_byte;
-                        counter_l++;
 
                     }
                 } else {
