@@ -77,7 +77,27 @@ int DMap::getFreeBlockCounter() {
 
 // write the changes to the disk
 bool DMap::persist() {
-    return false;
+
+    char buff[BLOCK_SIZE];
+
+    // for blocks that need to be stored within DMap
+    for (int block_index = 0; block_index < DMAP_SIZE; block_index++) {
+
+        // store 1 bit for every written block
+        for (int blockdevice_byte_index = 0; blockdevice_byte_index < BLOCK_SIZE; blockdevice_byte_index++) {
+
+            int block_track_array_index = (block_index * BLOCK_SIZE) + blockdevice_byte_index;
+
+            // verify that the index from the array which tracks all available blocks
+            // is within bounds
+            if (block_track_array_index < TOTAL_FS_BLOCKS) {
+                buff[blockdevice_byte_index] = blocks[block_track_array_index];
+            }
+
+        }
+        this->device->write(DMAP_OFFSET + block_index, buff);
+    }
+    return true;
 }
 
 // initialise the (existing) DMap and check the current available blocks

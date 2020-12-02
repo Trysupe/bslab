@@ -23,7 +23,7 @@
 
 
 #define DMAP_OFFSET 0  // specify where to start if we want to add a superblock later
-#define DMAP_SIZE 16  // 8KB should be plenty to store dmap values
+#define DMAP_SIZE 10  // 8KB should be plenty to store dmap values
 
 #define FAT_OFFSET DMAP_OFFSET + DMAP_SIZE
 #define FAT_SIZE 512
