@@ -84,6 +84,16 @@ void FAT::persist() {
     // reach the last block
     for (int i = 0; i <= iterate_x_times_to_reach_last_block_index; i++) {
 
+        // init the buffer with '-1' everywhere
+        // FF FF FF FF equals -1 in two's complement....
+        // this breaks the purpose of 'FAT_EOF' but oh well ¯\_(ツ)_/¯
+        for (int j = 0; j < BLOCK_SIZE / 4; j++) {
+            buffer[(4 * j) + 0] = 255;
+            buffer[(4 * j) + 1] = 255;
+            buffer[(4 * j) + 2] = 255;
+            buffer[(4 * j) + 3] = 255;
+        }
+
         // go over each modified block (while doing so redundantly)
         // start at the second entry since the first entry always point to the second modified
         // value and does not point anywhere if only one blockdevice is used
@@ -105,9 +115,6 @@ void FAT::persist() {
                         buffer[buffer_offset] = this_byte;
 
                     }
-                } else {
-//                    TODO: properly mark the EOF entries
-//                    buffer[(k*4) + 3] = FAT_EOF;
                 }
             }
         }
