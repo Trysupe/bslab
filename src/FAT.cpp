@@ -122,8 +122,7 @@ void FAT::initFAT() {
     for (int i = 0; i < FAT_SIZE; i++) {
             int i_offset = i + FAT_OFFSET;
             device->read(i_offset, buffer);
-            // TODO: find out how to reiterate the different blocks into same int pointer array
-            memcpy(fatArray, buffer, BLOCK_SIZE);
+            memcpy(fatArray+(i * BLOCK_SIZE / 4), buffer, BLOCK_SIZE);
     }
 }
 
