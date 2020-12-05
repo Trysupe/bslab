@@ -62,7 +62,7 @@ int MyOnDiskFS::fuseMknod(const char *path, mode_t mode, dev_t dev) {
     LOGM();
 
     rootFile *file = rootDir->createFile(path);
-//    this->rootDir->persist(file);
+    this->rootDir->persist(file);
 
     RETURN(0);
 }
@@ -102,8 +102,8 @@ int MyOnDiskFS::fuseUnlink(const char *path) {
         } while (nextBlock != FAT_EOF);
     }
 
-//    dMap->persist();
-//    fat->persist();
+   dMap->persist();
+   fat->persist();
 
     // clear the metadata block of the file
     char buff[BLOCK_SIZE];
@@ -144,7 +144,7 @@ int MyOnDiskFS::fuseRename(const char *path, const char *newpath) {
     }
 
     strcpy(file->name, newpath + 1);
-//    rootDir->persist(file);
+    rootDir->persist(file);
     RETURN(0);
 }
 
@@ -197,7 +197,7 @@ int MyOnDiskFS::fuseChmod(const char *path, mode_t mode) {
     }
 
     file->stat.st_mode = mode;
-//    rootDir->persist(file);
+    rootDir->persist(file);
 
     RETURN(0);
 }
@@ -220,7 +220,7 @@ int MyOnDiskFS::fuseChown(const char *path, uid_t uid, gid_t gid) {
 
     file->stat.st_uid = uid;
     file->stat.st_gid = gid;
-//    rootDir->persist(file);
+    rootDir->persist(file);
 
     RETURN(0);
 }
@@ -342,7 +342,7 @@ int MyOnDiskFS::fuseRead(const char *path, char *buf, size_t size, off_t offset,
     file->stat.st_atime = time(nullptr);
 
 
-//    this->rootDir->persist(file);
+    this->rootDir->persist(file);
 
     // We dont want to store the temp blocks
     delete[] blocks;
@@ -386,20 +386,16 @@ int MyOnDiskFS::fuseWrite(const char *path, const char *buf, size_t size, off_t 
         blockCount = size / BLOCK_SIZE + 1;
     }
 
+    // FIXME: check this
     // offset block to start writing on existing files
-    int blockOffset = offset / BLOCK_SIZE;
-
+//    int blockOffset = offset / BLOCK_SIZE;
     // if the existing file gets bigger, append to existing block
-    int blockCountDelta = blockOffset + blockCount - file->stat.st_blocks;
+//    int blockCountDelta = blockOffset + blockCount - file->stat.st_blocks;
 
-    if (blockCountDelta > 0) {
-        // Is there enough space to write?
-        if (dMap->getFreeBlockCounter() < blockCountDelta) {
-            return -ENOSPC;
-        }
+    if (blockCount > 0) {
 
         // create array of free blocks, according to size of the data we're writing
-        int* newBlocks = dMap->getXAmountOfFreeBlocks(blockCountDelta);
+        int* newBlocks = dMap->getXAmountOfFreeBlocks(blockCount);
         // file is new or empty
         if (file->firstBlock == -1) {
             file->firstBlock = newBlocks[0];
@@ -414,17 +410,17 @@ int MyOnDiskFS::fuseWrite(const char *path, const char *buf, size_t size, off_t 
         }
 
         // store the chain of blocks in fat
-        for (int i = 1; i < blockCountDelta; i++) {
+        for (int i = 1; i < blockCount; i++) {
             fat->setNextBlock(newBlocks[i - 1], newBlocks[i]);
         }
 
         // assign used blocks in dmap
-        for (int i = 0; i < blockCountDelta; i++) {
+        for (int i = 0; i < blockCount; i++) {
             dMap->setBlockState(newBlocks[i], true);
         }
 
         delete[] newBlocks;
-        file->stat.st_blocks = blockOffset + blockCount;
+        file->stat.st_blocks = blockCount;
     }
 
 
@@ -435,7 +431,7 @@ int MyOnDiskFS::fuseWrite(const char *path, const char *buf, size_t size, off_t 
 
     int currentBlock = file->firstBlock;
     // Move to offset - in case of writing to existing file
-    for (int i = 0; i < blockOffset; i++) {
+    for (int i = 0; i < blockCount; i++) {
         currentBlock = fat->getNextBlock(currentBlock);
     }
 
@@ -459,9 +455,9 @@ int MyOnDiskFS::fuseWrite(const char *path, const char *buf, size_t size, off_t 
     file->stat.st_ctime = time(nullptr);
 
     // persist the changes
-//    dMap->persist();
-//    fat->persist();
-//    rootDir->persist(file);
+    dMap->persist();
+    fat->persist();
+    rootDir->persist(file);
 
     RETURN(0);
 }
