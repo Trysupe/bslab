@@ -100,12 +100,16 @@ rootFile* RootDir::load(int index) {
 
 // write the changes to disk
 bool RootDir::persist(rootFile *file) {
-    return false;
+    char buff[BLOCK_SIZE];
+    memset(buff, 0, BLOCK_SIZE);
+    std::memcpy(buff, file, sizeof(rootFile));
+    this->device->write(ROOT_DIR_OFFSET + file->rootDirBlock, buff);
+    return true;
 }
 
 // load the files after opening an existing file container
 void RootDir::initRootDir() {
-    for (int i = ROOT_DIR_OFFSET; i < ROOT_DIR_OFFSET + ROOT_DIR_SIZE; i++) {
+    for (int i = 0; i < NUM_DIR_ENTRIES; i++) {
         rootFile *file = load(i);
         files[i] = file;
         if (file != nullptr) {

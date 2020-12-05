@@ -13,8 +13,8 @@
 class DMap {
 private:
     BlockDevice *device;
-    bool blocks[TOTAL_FS_BLOCKS];  // array of all blocks which contains true if the block is in use
-    int freeBlockCounter = TOTAL_FS_BLOCKS;  // keep track of all blocks currently available to use
+    bool blocks[DATA_BLOCKS];  // array of all blocks which contains true if the block is in use
+    int freeBlockCounter = DATA_BLOCKS;  // keep track of all blocks currently available to use
 
 public:
     DMap(BlockDevice *device);
