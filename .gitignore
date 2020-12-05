@@ -299,3 +299,4 @@ DerivedData/
 Make*
 CMakeFiles/*
 log.txt
+foo*
