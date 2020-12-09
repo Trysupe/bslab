@@ -81,12 +81,12 @@ bool DMap::persist() {
     char buff[BLOCK_SIZE];
 
     // for blocks that need to be stored within DMap
-    for (int block_index = 0; block_index < DMAP_SIZE; block_index++) {
+    for (int current_block_index = 0; current_block_index < DMAP_SIZE; current_block_index++) {
 
         // store 1 bit for every written block
         for (int blockdevice_byte_index = 0; blockdevice_byte_index < BLOCK_SIZE; blockdevice_byte_index++) {
 
-            int block_track_array_index = (block_index * BLOCK_SIZE) + blockdevice_byte_index;
+            int block_track_array_index = (current_block_index * BLOCK_SIZE) + blockdevice_byte_index;
 
             // verify that the index from the array which tracks all available blocks
             // is within bounds
@@ -97,7 +97,7 @@ bool DMap::persist() {
             }
 
         }
-        this->device->write(DMAP_OFFSET + block_index, buff);
+        this->device->write(DMAP_OFFSET + current_block_index, buff);
     }
     return true;
 }
@@ -108,20 +108,30 @@ void DMap::initDMap() {
     char buff[BLOCK_SIZE];
 
     // iterate over every block assigned to the dmap
-    for (int block_index = DMAP_OFFSET; block_index < DMAP_OFFSET + DMAP_SIZE; block_index++) {
+    for (int i = 0; i < DMAP_SIZE; i++) {
 
-        // grab the block data
+        // set the block index if a superblock has been defined
+        int current_block_index = i + DMAP_OFFSET;
+
+        // reset the buffer
         memset(buff, 0, BLOCK_SIZE);
-        this->device->read(block_index, buff);
+        // grab the block data
+        this->device->read(current_block_index, buff);
 
-        if (!FShelper::checkBlockContent(buff)) {
-            this->blocks[block_index] = true;
-            decreaseFreeBlockCounterBy(1);
-        } else {
-            this->blocks[block_index] = false;
+        // assign each value from buffer to blocks array
+        for (int j = 0; j < BLOCK_SIZE; j++) {
+            int blocks_index = (BLOCK_SIZE * i) + j;
+
+            // make sure the blocks index is in range
+            if (blocks_index < DATA_BLOCKS) {
+                // initialise the blocks array
+                this->blocks[blocks_index] = buff[j];
+                // decrease the counter if an occupied block has been found
+                if (buff[j] == 1) {
+                    decreaseFreeBlockCounterBy(1);
+                }
+            }
         }
-
-
     }
 }
 
