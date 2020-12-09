@@ -3,7 +3,7 @@
 // Copyright © 2017-2020 Oliver Waldhorst. All rights reserved.
 //
 
-#include "myondiskfs.h"
+#include <myondiskfs.h>
 
 // For documentation of FUSE methods see https://libfuse.github.io/doxygen/structfuse__operations.html
 
@@ -388,18 +388,19 @@ int MyOnDiskFS::fuseWrite(const char *path, const char *buf, size_t size, off_t 
 
     // FIXME: check this
     // offset block to start writing on existing files
-//    int blockOffset = offset / BLOCK_SIZE;
+    int blockOffset = offset / BLOCK_SIZE;
     // if the existing file gets bigger, append to existing block
-//    int blockCountDelta = blockOffset + blockCount - file->stat.st_blocks;
+    int blockCountDelta = blockOffset + blockCount - file->stat.st_blocks;
 
     if (blockCount > 0) {
 
         // create array of free blocks, according to size of the data we're writing
+        // also mark the blocks as used already
         int* newBlocks = dMap->getXAmountOfFreeBlocks(blockCount);
         // file is new or empty
         if (file->firstBlock == -1) {
             file->firstBlock = newBlocks[0];
-        } else {
+        } else {  // we are editing an existing file
             // connect the last block of the file to new blocks
             int currentBlock = file->firstBlock;
             // get end of chain
@@ -414,10 +415,6 @@ int MyOnDiskFS::fuseWrite(const char *path, const char *buf, size_t size, off_t 
             fat->setNextBlock(newBlocks[i - 1], newBlocks[i]);
         }
 
-        // assign used blocks in dmap
-        for (int i = 0; i < blockCount; i++) {
-            dMap->setBlockState(newBlocks[i], true);
-        }
 
         delete[] newBlocks;
         file->stat.st_blocks = blockCount;
@@ -431,14 +428,14 @@ int MyOnDiskFS::fuseWrite(const char *path, const char *buf, size_t size, off_t 
 
     int currentBlock = file->firstBlock;
     // Move to offset - in case of writing to existing file
-    for (int i = 0; i < blockCount; i++) {
+    for (int i = 1; i < blockOffset; i++) {
         currentBlock = fat->getNextBlock(currentBlock);
     }
 
     // Collect blocks to write
     int* blocks = new int[blockCount];
     blocks[0] = currentBlock;
-    for (int i = 1; i < blockCount; i++) {
+    for (int i = 1; i < blockCountDelta; i++) {
         currentBlock = fat->getNextBlock(currentBlock);
         blocks[i] = currentBlock;
     }
@@ -624,7 +621,7 @@ int MyOnDiskFS::writeFile(int *blocks, int blockCount, int offset, size_t size, 
         memset(buffer, 0, BLOCK_SIZE);
 
         // is data that gets written stored in cache?
-        if (i == 0 && file->writeCacheBlock == ((int32_t) blocks[i])) {
+        if (i == 0 && file->writeCacheBlock == ((int) blocks[i])) {
             memcpy(buffer, file->writeCache, BLOCK_SIZE);
         } else {
             blockDevice->read(blocks[i], buffer);
@@ -664,7 +661,7 @@ int MyOnDiskFS::writeFile(int *blocks, int blockCount, int offset, size_t size, 
             memcpy(file->writeCache, buffer, BLOCK_SIZE);
         }
 
-        blockDevice->write(blocks[i], buffer);
+        blockDevice->write(blocks[i] + DATA_OFFSET, buffer);
     }
 
     if (size != 0) {

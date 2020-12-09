@@ -20,7 +20,7 @@ public:
     DMap(BlockDevice *device);
     ~DMap();
 
-    int getNextFreeBlock(int starting_index);
+    int getNextFreeBlock();
     int* getXAmountOfFreeBlocks(int amount);
 
     void setBlockState(int dataBlockNum, bool isUsed);

@@ -8,9 +8,9 @@
 
 #include "myfs.h"
 
-#include "RootDir.h"
 #include "DMap.h"
 #include "FAT.h"
+#include "RootDir.h"
 
 /// @brief On-disk implementation of a simple file system.
 class MyOnDiskFS : public MyFS {
