@@ -456,7 +456,7 @@ int MyOnDiskFS::fuseWrite(const char *path, const char *buf, size_t size, off_t 
     fat->persist();
     rootDir->persist(file);
 
-    RETURN(0);
+    RETURN(file->stat.st_size);
 }
 
 /// @brief Close a file.
@@ -620,12 +620,13 @@ int MyOnDiskFS::writeFile(int *blocks, int blockCount, int offset, size_t size, 
     for (int i = 0; i < blockCount; i++) {
         memset(buffer, 0, BLOCK_SIZE);
 
+        // FIXME: what happend here?
         // is data that gets written stored in cache?
-        if (i == 0 && file->writeCacheBlock == ((int) blocks[i])) {
-            memcpy(buffer, file->writeCache, BLOCK_SIZE);
-        } else {
-            blockDevice->read(blocks[i], buffer);
-        }
+//        if (i == 0 && file->writeCacheBlock == ((int) blocks[i])) {
+//            memcpy(buffer, file->writeCache, BLOCK_SIZE);
+//        } else {
+//            blockDevice->read(blocks[i], buffer);
+//        }
         size_t bufOffset = i * BLOCK_SIZE;
         size_t tempSize;
 
