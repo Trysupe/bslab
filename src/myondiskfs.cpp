@@ -490,9 +490,30 @@ int MyOnDiskFS::fuseRelease(const char *path, struct fuse_file_info *fileInfo) {
 int MyOnDiskFS::fuseTruncate(const char *path, off_t newSize) {
     LOGM();
 
-    // TODO: [PART 2] Implement this!
+    // FIXME: find out flag
+    struct fuse_file_info fileInfo = {};
+    fileInfo.flags = O_RDWR;  // maybe 32769? (value from debugger)
 
-    RETURN(0);
+    // open the file: return errno - or - 0 if successful
+    int ret = fuseOpen(path, &fileInfo);
+
+    // prematurely return errno if found
+    if (ret != 0) {
+        return ret;
+    }
+
+    // resize the file
+    ret = fuseTruncate(path, newSize, &fileInfo);
+
+    // return error messages
+    if (ret != 0) {
+        return ret;
+    }
+
+    // Close the opened file
+    ret = fuseRelease(path, &fileInfo);
+    // and return the final error code - or - 0 on success
+    RETURN(ret);
 }
 
 /// @brief Truncate a file.
@@ -508,7 +529,92 @@ int MyOnDiskFS::fuseTruncate(const char *path, off_t newSize) {
 int MyOnDiskFS::fuseTruncate(const char *path, off_t newSize, struct fuse_file_info *fileInfo) {
     LOGM();
 
-    // TODO: [PART 2] Implement this!
+    // FIXME: why is newSize 0?
+    // verify that the file correct file has been opened
+    if (openFiles[fileInfo->fh] == nullptr) {
+        return -EBADF;
+    }
+    // grab file information in our rootFile structure
+    rootFile *file = openFiles[fileInfo->fh]->file;
+
+
+    // file size is unchanged. do nothing and return 0
+    if (file->stat.st_size == newSize) {
+        return 0;
+    }
+
+    // compute modified bytes by grabbing absolute value
+    int sizeDelta = abs(newSize - file->stat.st_size);
+
+    /// case 1: new file is bigger than before
+    if (newSize > file->stat.st_size) {
+
+        // FIXME: find out
+        char *buffer = new char[sizeDelta];
+        for (int i = 0; i < sizeDelta; i++) {
+            buffer[i] = '\0';
+        }
+
+        // write the new data
+        int ret = fuseWrite(path, buffer, sizeDelta, file->stat.st_size, fileInfo);
+
+        // verify that we've written the correct amount of bytes
+        if (ret != sizeDelta) {
+            return -EIO;
+        }
+        delete[] buffer;
+        return 0;
+    }
+
+    /// case 2: new file is smaller than before
+    // FIXME: free used blocks from blockdevice when shoving datablocks
+    uint32_t blockCount;
+    // count the required amount of blocks to
+    if (newSize % BLOCK_SIZE == 0) {
+        blockCount = newSize / BLOCK_SIZE;
+    } else {
+        blockCount = newSize / BLOCK_SIZE + 1;
+    }
+
+    // count the difference in blocks (to be removed later on)
+    uint32_t blockDelta = file->stat.st_blocks - blockCount;
+
+    // should always be >= 1 unless we are wiping the file, which should not end up here
+    if (blockDelta > 0) {
+        uint32_t offsetBlock = file->stat.st_blocks - blockDelta;
+        int32_t currentBlock = file->firstBlock;
+        // move to offset block
+        for (uint32_t i = 1; i < offsetBlock; i++) {
+            currentBlock = fat->getNextBlock(currentBlock);
+        }
+
+        int32_t nextBlock = fat->getNextBlock(currentBlock);
+
+        // go through dmap and fat chain and set them all to unused/free
+        while (nextBlock != FAT_EOF) {
+            fat->freeBlock(currentBlock);
+            dMap->setBlockState(nextBlock, false);
+            currentBlock = nextBlock;
+            nextBlock = fat->getNextBlock(currentBlock);
+        }
+
+        if (blockCount == 0) {
+            // If the file was truncated to zero the starting block wasn't freed yet
+            dMap->setBlockState(file->firstBlock, false);
+            file->firstBlock = -1;
+        }
+        file->stat.st_blocks = blockCount;
+    }
+
+    // determine metadata
+    file->stat.st_size = newSize;
+    file->stat.st_mtime = time(nullptr);
+    file->stat.st_ctime = time(nullptr);
+
+    // persist changes
+    this->dMap->persist();
+    fat->persist();
+    this->rootDir->persist(file);
 
     RETURN(0);
 }
