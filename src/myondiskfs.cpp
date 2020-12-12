@@ -347,7 +347,8 @@ int MyOnDiskFS::fuseRead(const char *path, char *buf, size_t size, off_t offset,
     // We dont want to store the temp blocks
     delete[] blocks;
 
-    RETURN(0);
+    // return the amount of bytes to read
+    RETURN(size);
 }
 
 /// @brief Write to a file.
@@ -456,7 +457,8 @@ int MyOnDiskFS::fuseWrite(const char *path, const char *buf, size_t size, off_t 
     fat->persist();
     rootDir->persist(file);
 
-    RETURN(file->stat.st_size);
+    // return the actual written number of bytes
+    RETURN(size);
 }
 
 /// @brief Close a file.
