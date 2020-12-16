@@ -392,7 +392,7 @@ int MyOnDiskFS::fuseWrite(const char *path, const char *buf, size_t size, off_t 
     // if the existing file gets bigger, append to existing block
     int blockCountDelta = blockOffset + blockCount - file->stat.st_blocks;
 
-    if (blockCount > 0) {
+    if (blockCountDelta > 0) {
 
         // create array of free blocks, according to size of the data we're writing
         // also mark the blocks as used already
@@ -536,8 +536,6 @@ int MyOnDiskFS::fuseTruncate(const char *path, off_t newSize, struct fuse_file_i
     // grab file information in our rootFile structure
     rootFile *file = openFiles[fileInfo->fh]->file;
 
-
-    /// FIXME: is this still required?
     // file size is unchanged. do nothing and return 0
     if (file->stat.st_size == newSize) {
         return 0;
@@ -705,6 +703,13 @@ int MyOnDiskFS::writeFile(int *blocks, int blockCount, int offset, size_t size, 
     // write all blocks given by the counter
     for (int i = 0; i < blockCount; i++) {
         memset(buffer, 0, BLOCK_SIZE);
+
+        // grab the already present data inside the block into the buffer
+        if (i == 0 && file->writeCacheBlock == ((int32_t) blocks[i])) {
+            memcpy(buffer, file->writeCache, BLOCK_SIZE);
+        } else {
+            blockDevice->read(DATA_OFFSET + blocks[i], buffer);
+        }
 
         size_t bufOffset = i * BLOCK_SIZE;
         size_t tempSize;
