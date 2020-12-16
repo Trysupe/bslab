@@ -9,7 +9,7 @@
 
 #undef DEBUG
 
-// TODO: Comment lines to reduce debug messages
+/// Comment lines to reduce debug messages
 #define DEBUG
 #define DEBUG_METHODS
 #define DEBUG_RETURN_VALUES
@@ -387,7 +387,6 @@ int MyOnDiskFS::fuseWrite(const char *path, const char *buf, size_t size, off_t 
         blockCount = size / BLOCK_SIZE + 1;
     }
 
-    // FIXME: check this
     // offset block to start writing on existing files
     int blockOffset = offset / BLOCK_SIZE;
     // if the existing file gets bigger, append to existing block
@@ -469,8 +468,6 @@ int MyOnDiskFS::fuseWrite(const char *path, const char *buf, size_t size, off_t 
 int MyOnDiskFS::fuseRelease(const char *path, struct fuse_file_info *fileInfo) {
     LOGM();
 
-    // TODO: [PART 2] Implement this!
-
     int openFileIndex = fileInfo->fh;
     delete openFiles[openFileIndex];
     openFiles[openFileIndex] = nullptr;
@@ -490,9 +487,10 @@ int MyOnDiskFS::fuseRelease(const char *path, struct fuse_file_info *fileInfo) {
 int MyOnDiskFS::fuseTruncate(const char *path, off_t newSize) {
     LOGM();
 
-    // FIXME: find out flag
+    // FIXME: why is newSize 0?
+    // truncate 'only' works because fuseWrite is called by fuse afterwards.
+    // fuseTruncate basically just takes care of the fat/dmap handling after removing/adding more data
     struct fuse_file_info fileInfo = {};
-    fileInfo.flags = O_RDWR;  // maybe 32769? (value from debugger)
 
     // open the file: return errno - or - 0 if successful
     int ret = fuseOpen(path, &fileInfo);
@@ -529,7 +527,6 @@ int MyOnDiskFS::fuseTruncate(const char *path, off_t newSize) {
 int MyOnDiskFS::fuseTruncate(const char *path, off_t newSize, struct fuse_file_info *fileInfo) {
     LOGM();
 
-    // FIXME: why is newSize 0?
     // verify that the file correct file has been opened
     if (openFiles[fileInfo->fh] == nullptr) {
         return -EBADF;
@@ -538,6 +535,7 @@ int MyOnDiskFS::fuseTruncate(const char *path, off_t newSize, struct fuse_file_i
     rootFile *file = openFiles[fileInfo->fh]->file;
 
 
+    /// FIXME: is this still required?
     // file size is unchanged. do nothing and return 0
     if (file->stat.st_size == newSize) {
         return 0;
@@ -546,27 +544,6 @@ int MyOnDiskFS::fuseTruncate(const char *path, off_t newSize, struct fuse_file_i
     // compute modified bytes by grabbing absolute value
     int sizeDelta = abs(newSize - file->stat.st_size);
 
-    /// case 1: new file is bigger than before
-    if (newSize > file->stat.st_size) {
-
-        // FIXME: find out
-        char *buffer = new char[sizeDelta];
-        for (int i = 0; i < sizeDelta; i++) {
-            buffer[i] = '\0';
-        }
-
-        // write the new data
-        int ret = fuseWrite(path, buffer, sizeDelta, file->stat.st_size, fileInfo);
-
-        // verify that we've written the correct amount of bytes
-        if (ret != sizeDelta) {
-            return -EIO;
-        }
-        delete[] buffer;
-        return 0;
-    }
-
-    /// case 2: new file is smaller than before
     // FIXME: free used blocks from blockdevice when shoving datablocks
     uint32_t blockCount;
     // count the required amount of blocks to
@@ -579,7 +556,7 @@ int MyOnDiskFS::fuseTruncate(const char *path, off_t newSize, struct fuse_file_i
     // count the difference in blocks (to be removed later on)
     uint32_t blockDelta = file->stat.st_blocks - blockCount;
 
-    // should always be >= 1 unless we are wiping the file, which should not end up here
+    // should always be >= 1 unless we are wiping the file, (in which case we should not end up here in the first place)
     if (blockDelta > 0) {
         uint32_t offsetBlock = file->stat.st_blocks - blockDelta;
         int32_t currentBlock = file->firstBlock;
@@ -711,11 +688,10 @@ void* MyOnDiskFS::fuseInit(struct fuse_conn_info *conn) {
 void MyOnDiskFS::fuseDestroy() {
     LOGM();
 
-    // TODO: [PART 2] Implement this!
 
 }
 
-// TODO: [PART 2] You may add your own additional methods here!
+// You may add your own additional methods here!
 
 /// @param [*blocks] is an array of blocks with data
 /// @param [blockCount] how many blocks are in *blocks
@@ -728,13 +704,6 @@ int MyOnDiskFS::writeFile(int *blocks, int blockCount, int offset, size_t size, 
     for (int i = 0; i < blockCount; i++) {
         memset(buffer, 0, BLOCK_SIZE);
 
-        // FIXME: what happend here?
-        // is data that gets written stored in cache?
-//        if (i == 0 && file->writeCacheBlock == ((int) blocks[i])) {
-//            memcpy(buffer, file->writeCache, BLOCK_SIZE);
-//        } else {
-//            blockDevice->read(blocks[i], buffer);
-//        }
         size_t bufOffset = i * BLOCK_SIZE;
         size_t tempSize;
 
