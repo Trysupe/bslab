@@ -487,7 +487,9 @@ int MyOnDiskFS::fuseRelease(const char *path, struct fuse_file_info *fileInfo) {
 int MyOnDiskFS::fuseTruncate(const char *path, off_t newSize) {
     LOGM();
 
-    // FIXME: why is newSize 0?
+    /// why is newSize 0?  -> truncate calls with newsize 0 to 'remove' a file
+
+
     // truncate 'only' works because fuseWrite is called by fuse afterwards.
     // fuseTruncate basically just takes care of the fat/dmap handling after removing/adding more data
     struct fuse_file_info fileInfo = {};
