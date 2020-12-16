@@ -30,7 +30,11 @@ add_executable(unittests src/blockdevice.cpp
         testing/main.cpp
         testing/utest-blockdevice.cpp
         testing/utest-myfs.cpp
-        testing/tools.cpp testing/itest.cpp)
+        testing/tools.cpp testing/itest.cpp
+        src/DMap.cpp
+        src/FAT.cpp
+        src/RootDir.cpp
+        src/FShelper.cpp)
 
 add_executable(integrationtests
         src/blockdevice.cpp
@@ -39,7 +43,11 @@ add_executable(integrationtests
         src/myondiskfs.cpp
         testing/main.cpp
         testing/itest.cpp
-        testing/tools.cpp includes/FShelper.h)
+        testing/tools.cpp includes/FShelper.h
+        src/DMap.cpp
+        src/FAT.cpp
+        src/RootDir.cpp
+        src/FShelper.cpp)
 
 find_package(PkgConfig)
 pkg_check_modules(FUSE fuse)
