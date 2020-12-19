@@ -16,6 +16,32 @@
 #define SMALL_SIZE 1024
 #define LARGE_SIZE 20*1024*1024
 
+
+TEST_CASE("T-1.00", "Our Test") {
+    printf("Testcase 1.0: Read a segment of a file sequentially\n");
+
+    int fd;
+
+    // set up read buffer
+    int buf_size = 2;
+    char* r= new char[buf_size];
+    memset(r, 0, buf_size);
+
+    // Open file again
+    fd = open("foo", O_EXCL | O_RDWR, 0666);
+    REQUIRE(fd >= 0);
+
+    // Read from the file
+    pread(fd, r, 2, 0);
+    memset(r, 0, buf_size);
+    pread(fd, r, 2, 2);
+
+
+    // Close file
+    REQUIRE(close(fd) >= 0);
+
+}
+
 TEST_CASE("T-1.01", "[Part_1]") {
     printf("Testcase 1.1: Create & remove a single file\n");
 
