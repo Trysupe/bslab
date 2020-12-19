@@ -70,11 +70,6 @@ void DMap::decreaseFreeBlockCounterBy(int amount) {
     this->freeBlockCounter -= amount;
 }
 
-// return the value of the total amount of free data blocks available
-int DMap::getFreeBlockCounter() {
-    return this->freeBlockCounter;
-}
-
 // write the changes to the disk
 bool DMap::persist() {
 

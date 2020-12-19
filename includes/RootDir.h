@@ -22,7 +22,6 @@ public:
     void deleteFile(rootFile *file);
 
     rootFile* getFile(const char *path);
-    int getFilesCount();
     rootFile** getFiles();
 
     rootFile* load(int index);
