@@ -72,10 +72,6 @@ rootFile* RootDir::getFile(const char *path) {
     return nullptr;  // return if not found
 }
 
-// get the counter of all files created
-int RootDir::getFilesCount() {
-    return existingFilesCounter;
-}
 
 // get the array of all existing files
 rootFile** RootDir::getFiles() {

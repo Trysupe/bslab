@@ -28,7 +28,6 @@ public:
 
     void increaseFreeBlockCounterBy(int amount);
     void decreaseFreeBlockCounterBy(int amount);
-    int getFreeBlockCounter();
 
     bool persist();
 
