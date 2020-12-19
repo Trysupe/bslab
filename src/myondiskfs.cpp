@@ -759,7 +759,7 @@ int MyOnDiskFS::writeFile(int *blocks, int blockCount, int offset, size_t size, 
 
 /// @brief Helper method to read a file from disk
 /// @return 0 on success, -1 on failure
-int MyOnDiskFS::readFile(int *blocks, int blockCount, int offset, size_t size, char *buf, openFile *file) {
+int MyOnDiskFS::readFile(int *blocks, int blockCount, int offset, size_t size, char *buf, openFile *openFile) {
 
     // Read all blocks given by the block counter
     for (int i = 0; i < blockCount; i++) {
@@ -769,8 +769,8 @@ int MyOnDiskFS::readFile(int *blocks, int blockCount, int offset, size_t size, c
 
 
         // is the data that needs to be read available in cache?
-        if (i == 0 && file->readCacheBlock == ((int) blocks[0])) {
-            memcpy(buffer, file->readCache, BLOCK_SIZE);
+        if (i == 0 && openFile->readCacheBlock == ((int) blocks[0])) {
+            memcpy(buffer, openFile->readCache, BLOCK_SIZE);
         } else {
             blockDevice->read(DATA_OFFSET + blocks[i], buffer);
         }
@@ -804,8 +804,8 @@ int MyOnDiskFS::readFile(int *blocks, int blockCount, int offset, size_t size, c
         // last block
         if (i == blockCount - 1) {
             // and store it in cache
-            file->readCacheBlock = blocks[i];
-            memcpy(file->readCache, buffer, BLOCK_SIZE);
+            openFile->readCacheBlock = blocks[i];
+            memcpy(openFile->readCache, buffer, BLOCK_SIZE);
         }
     }
 
