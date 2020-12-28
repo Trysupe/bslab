@@ -15,21 +15,20 @@
 #include "blockdevice.h"
 #include "myfs-structs.h"
 
-class MyFS {
+class MyFS
+{
 protected:
     static MyFS *_instance;
     FILE *logFile;
 
     BlockDevice *blockDevice;
-    
+
 public:
     static MyFS *Instance();
-    
-    // TODO: [PART 2] You may add attributes of your file system here
-    
+
     MyFS();
     ~MyFS();
-    
+
     // --- Methods called by FUSE ---
     // For Documentation see https://libfuse.github.io/doxygen/structfuse__operations.html
     virtual int fuseGetattr(const char *path, struct stat *statbuf);
@@ -59,7 +58,7 @@ public:
     virtual int fuseSetxattr(const char *path, const char *name, const char *value, size_t size, int flags);
     virtual int fuseGetxattr(const char *path, const char *name, char *value, size_t size);
 #endif
-    virtual void* fuseInit(struct fuse_conn_info *conn);
+    virtual void *fuseInit(struct fuse_conn_info *conn);
     virtual int fuseListxattr(const char *path, char *list, size_t size);
     virtual int fuseRemovexattr(const char *path, const char *name);
     virtual int fuseOpendir(const char *path, struct fuse_file_info *fileInfo);
@@ -69,9 +68,6 @@ public:
     virtual int fuseTruncate(const char *path, off_t offset, struct fuse_file_info *fileInfo);
     virtual int fuseCreate(const char *, mode_t, struct fuse_file_info *);
     virtual void fuseDestroy();
-    
-    // TODO: [PART 2] You may add methods of your file system here
-    
 };
 
 #endif /* myfs_h */
