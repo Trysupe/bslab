@@ -456,7 +456,7 @@ int MyOnDiskFS::fuseWrite(const char *path, const char *buf, size_t size, off_t 
         }
 
         delete[] newBlocks;
-        file->stat.st_blocks = blockCount;
+        file->stat.st_blocks = blockCount + blockOffset;
     }
 
     // write new file size
@@ -467,9 +467,12 @@ int MyOnDiskFS::fuseWrite(const char *path, const char *buf, size_t size, off_t 
 
     int currentBlock = file->firstBlock;
     // Move to offset - in case of writing to existing file
-    for (int i = 1; i < blockOffset; i++)
+    for (int i = 1; i <= blockOffset; i++)
     {
-        currentBlock = fat->getNextBlock(currentBlock);
+        int nextBlockIndex = fat->getNextBlock(currentBlock);
+        if (nextBlockIndex != FAT_EOF) {
+            currentBlock = nextBlockIndex;
+        }
     }
 
     // Collect blocks to write
@@ -786,7 +789,7 @@ int MyOnDiskFS::writeFile(int *blocks, int blockCount, int offset, size_t size, 
         if (i == 0)
         {
             // if there's enough space in this block for the data
-            if ((size_t)(offset + size) < (size_t)(BLOCK_SIZE - offset))
+            if ((size_t)(offset + size) < (size_t)(BLOCK_SIZE))
             {
                 tempSize = size;
             }
@@ -827,10 +830,6 @@ int MyOnDiskFS::writeFile(int *blocks, int blockCount, int offset, size_t size, 
         blockDevice->write(blocks[i] + DATA_OFFSET, buffer);
     }
 
-    if (size != 0)
-    {
-        return -1;
-    }
     return 0;
 }
 
