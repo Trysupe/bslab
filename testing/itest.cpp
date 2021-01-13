@@ -22,6 +22,21 @@ TEST_CASE("T-1.00", "Our Test") {
 
     int fd;
 
+    char* w= new char[3];
+    memset(w, 0, 3);
+    w = "123";
+
+    // Create file
+    fd = open("foo", O_EXCL | O_RDWR | O_CREAT, 0666);
+    REQUIRE(fd >= 0);
+
+
+    // Write to the file
+    REQUIRE(write(fd, w, 3) == 3);
+
+    // Close file
+    REQUIRE(close(fd) >= 0);
+
     // set up read buffer
     int buf_size = 2;
     char* r= new char[buf_size];
@@ -39,6 +54,9 @@ TEST_CASE("T-1.00", "Our Test") {
 
     // Close file
     REQUIRE(close(fd) >= 0);
+
+    // remove file
+    REQUIRE(unlink("foo") >= 0);
 
 }
 
