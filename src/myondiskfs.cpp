@@ -490,7 +490,6 @@ int MyOnDiskFS::fuseWrite(const char *path, const char *buf, size_t size, off_t 
         return -EIO;
     }
     // and set the new timestamps
-    // TODO: set atime?
     file->stat.st_mtime = time(nullptr);
     file->stat.st_ctime = time(nullptr);
 
@@ -532,7 +531,7 @@ int MyOnDiskFS::fuseTruncate(const char *path, off_t newSize)
 {
     LOGM();
 
-    // TODO why is newSize 0?  -> truncate calls with newsize 0 to 'remove' a file
+    // why is newSize 0?  -> truncate calls with newsize 0 to 'remove' a file
 
     // truncate 'only' works because fuseWrite is called by fuse afterwards.
     // fuseTruncate basically just takes care of the fat/dmap handling after removing/adding more data
@@ -590,9 +589,6 @@ int MyOnDiskFS::fuseTruncate(const char *path, off_t newSize, struct fuse_file_i
         return 0;
     }
 
-    //TODO: Remove line?
-    // compute modified bytes by grabbing absolute value
-    int sizeDelta = abs(newSize - file->stat.st_size);
 
     // FIXME: free used blocks from blockdevice when shoving datablocks
     uint32_t blockCount;
