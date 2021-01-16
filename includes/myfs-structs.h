@@ -19,15 +19,15 @@
 #define BLOCK_SIZE 512
 #define NUM_DIR_ENTRIES 64
 #define NUM_OPEN_FILES NUM_DIR_ENTRIES
-#define DATA_BLOCKS 65536  // 1024*1024*512B = 2097152 which approx. to 500 MB total FS size
+#define DATA_BLOCKS 262144 // approx 134 MB total FS size
 
 #define BD_SIZE 0
 
 #define DMAP_OFFSET BD_SIZE  // specify where to start if we want to add a superblock later
-#define DMAP_SIZE 128
+#define DMAP_SIZE 512
 
 #define FAT_OFFSET DMAP_OFFSET + DMAP_SIZE
-#define FAT_SIZE 1024
+#define FAT_SIZE 2048
 #define FAT_EOF -1    // set a terminator to mark a last block of a file
 
 #define ROOT_DIR_OFFSET FAT_OFFSET + FAT_SIZE
