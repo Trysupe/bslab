@@ -103,6 +103,7 @@ void FAT::persist() {
                     buffer[buffer_offset] = this_byte;
 
                 }
+                break;
             }
 
             this_iteration++;
