@@ -14,11 +14,3 @@ bereitstellen. Das lässt sich mit den folgenden Kommandos ausprobieren (dabei
 	mkdir -p mount
 	bin/mount.myfs mount -l log.txt
 
-Folgende Informationen können noch hilfreich sein:
-
-* [Anlegen eines GIT-Projekts für Ihr Team](documentation/createGitProject.md)
-* [Importieren des Projekts in Eclipse](documentation/eclipseImportProject.md)
-* [Konfiguration von älteren Eclipse-Versionen](documentation/eclipseConfig.md)
-* [Einrichten der Arbeitsumgebung unter Linux](documentation/setupLinux.md)
-* [Einrichten der Arbeitsumgebung unter MacOS](documentation/setupMacos.md)
-* [Entwickeln mit Docker](documentation/setupDocker.md) (z.B. unter Microsoft Windows)
